@@ -1,25 +1,32 @@
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useMutation } from '@tanstack/react-query';
-import { AxiosError } from 'axios';
-import { X } from 'lucide-react';
 import { equipamentosApi } from '../api/equipamentos';
+import { mensagemErro } from '../api/erro';
 import { Button } from './Button';
 import { Input } from './Input';
-import type { AnaliseResponse, ErroResponse, ResultadoAnaliseDTO } from '../types/api';
+import { Modal } from './Modal';
+import { ErrorAlert } from './ErrorAlert';
+import type { AnaliseResponse, ResultadoAnaliseDTO } from '../types/api';
+
+// Campo numérico opcional: vazio vira NaN (valueAsNumber) e é descartado no payload
+const inteiroOpcional = z
+  .union([z.number().int('Use número inteiro').min(0, 'Não pode ser negativo'), z.nan()])
+  .optional();
 
 const schema = z.object({
   fabricante: z.string().optional(),
   modelo: z.string().optional(),
   cpuFabricante: z.string().optional(),
   cpuModelo: z.string().optional(),
-  cpuGeracao: z.union([z.number().int(), z.nan()]).optional(),
-  cpuCores: z.union([z.number().int(), z.nan()]).optional(),
-  cpuThreads: z.union([z.number().int(), z.nan()]).optional(),
-  ramGb: z.union([z.number().int(), z.nan()]).optional(),
+  cpuGeracao: inteiroOpcional,
+  cpuCores: inteiroOpcional,
+  cpuThreads: inteiroOpcional,
+  ramGb: inteiroOpcional,
   armazenamentoTipo: z.string().optional(),
-  armazenamentoGb: z.union([z.number().int(), z.nan()]).optional(),
+  armazenamentoGb: inteiroOpcional,
   soNome: z.string().optional(),
   soVersao: z.string().optional(),
   observacoes: z.string().optional(),
@@ -35,6 +42,8 @@ interface Props {
 }
 
 export function RevisaoAnaliseModal({ equipamentoId, analiseAtual, onClose, onSuccess }: Props) {
+  const [erro, setErro] = useState<string | null>(null);
+
   const {
     register,
     handleSubmit,
@@ -68,65 +77,64 @@ export function RevisaoAnaliseModal({ equipamentoId, analiseAtual, onClose, onSu
       return equipamentosApi.revisar(equipamentoId, payload);
     },
     onSuccess: (data) => onSuccess(data),
-    onError: (e: AxiosError<ErroResponse>) => {
-      alert(e.response?.data?.mensagem || 'Erro ao revisar');
-    },
+    onError: (e) => setErro(mensagemErro(e, 'Erro ao revisar')),
   });
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-[60]">
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between p-6 border-b border-slate-200">
-          <h2 className="text-lg font-bold text-slate-900">Revisar Análise</h2>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-600">
-            <X size={20} />
-          </button>
-        </div>
-
-        <form onSubmit={handleSubmit((d) => revisarMutation.mutate(d))} className="p-6 space-y-4">
+    <Modal title="Revisar Análise" onClose={onClose} size="2xl">
+        <form
+          onSubmit={handleSubmit((d) => {
+            setErro(null);
+            revisarMutation.mutate(d);
+          })}
+          className="p-4 sm:p-6 space-y-4"
+        >
           <p className="text-sm text-slate-500">
             Os campos já vêm preenchidos com o que a IA leu. Corrija só o que estiver errado.
           </p>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Input label="Fabricante" {...register('fabricante')} />
             <Input label="Modelo" {...register('modelo')} />
           </div>
 
           <h3 className="text-sm font-medium text-slate-700 pt-2">CPU</h3>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Input label="Fabricante CPU" {...register('cpuFabricante')} />
             <Input label="Modelo CPU" {...register('cpuModelo')} />
-            <Input label="Geração" type="number" {...register('cpuGeracao', { valueAsNumber: true })} />
-            <Input label="Cores" type="number" {...register('cpuCores', { valueAsNumber: true })} />
-            <Input label="Threads" type="number" {...register('cpuThreads', { valueAsNumber: true })} />
+            <Input label="Geração" type="number" inputMode="numeric" error={errors.cpuGeracao?.message} {...register('cpuGeracao', { valueAsNumber: true })} />
+            <Input label="Cores" type="number" inputMode="numeric" error={errors.cpuCores?.message} {...register('cpuCores', { valueAsNumber: true })} />
+            <Input label="Threads" type="number" inputMode="numeric" error={errors.cpuThreads?.message} {...register('cpuThreads', { valueAsNumber: true })} />
           </div>
 
           <h3 className="text-sm font-medium text-slate-700 pt-2">Memória e armazenamento</h3>
-          <div className="grid grid-cols-3 gap-4">
-            <Input label="RAM (GB)" type="number" {...register('ramGb', { valueAsNumber: true })} />
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <Input label="RAM (GB)" type="number" inputMode="numeric" error={errors.ramGb?.message} {...register('ramGb', { valueAsNumber: true })} />
             <Input label="Tipo disco" placeholder="SSD / HDD" {...register('armazenamentoTipo')} />
-            <Input label="Capacidade (GB)" type="number" {...register('armazenamentoGb', { valueAsNumber: true })} />
+            <Input label="Capacidade (GB)" type="number" inputMode="numeric" error={errors.armazenamentoGb?.message} {...register('armazenamentoGb', { valueAsNumber: true })} />
           </div>
 
           <h3 className="text-sm font-medium text-slate-700 pt-2">Sistema operacional</h3>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Input label="Nome" {...register('soNome')} />
             <Input label="Versão" {...register('soVersao')} />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">
+            <label htmlFor="observacoes" className="block text-sm font-medium text-slate-700 mb-1">
               Observações
             </label>
             <textarea
+              id="observacoes"
               {...register('observacoes')}
               rows={3}
               className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-vr-500"
             />
           </div>
 
-          <div className="flex justify-end gap-2 pt-4 border-t border-slate-200">
+          {erro && <ErrorAlert>{erro}</ErrorAlert>}
+
+          <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 pt-4 border-t border-slate-200">
             <Button type="button" variant="secondary" onClick={onClose}>
               Cancelar
             </Button>
@@ -135,7 +143,6 @@ export function RevisaoAnaliseModal({ equipamentoId, analiseAtual, onClose, onSu
             </Button>
           </div>
         </form>
-      </div>
-    </div>
+    </Modal>
   );
 }

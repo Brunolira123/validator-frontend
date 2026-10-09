@@ -3,15 +3,16 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useMutation } from '@tanstack/react-query';
-import { AxiosError } from 'axios';
-import { X, Search, Loader2 } from 'lucide-react';
+import { Search, Loader2 } from 'lucide-react';
 import { clientesApi } from '../api/clientes';
+import { mensagemErro } from '../api/erro';
 import { Button } from './Button';
 import { Input } from './Input';
-import type { ErroResponse } from '../types/api';
+import { Modal } from './Modal';
+import { ErrorAlert } from './ErrorAlert';
 
 const schema = z.object({
-  cnpj: z.string().min(14, 'CNPJ inválido'),
+  cnpj: z.string().refine((v) => v.replace(/\D/g, '').length === 14, 'CNPJ precisa ter 14 dígitos'),
   razaoSocial: z.string().min(1, 'Informe a razão social'),
   nomeFantasia: z.string().optional(),
   endereco: z.string().optional(),
@@ -48,9 +49,7 @@ export function NovoClienteModal({ onClose, onSuccess }: Props) {
   const criarMutation = useMutation({
     mutationFn: clientesApi.criar,
     onSuccess: () => onSuccess(),
-    onError: (e: AxiosError<ErroResponse>) => {
-      setErroGeral(e.response?.data?.mensagem || 'Erro ao criar cliente');
-    },
+    onError: (e) => setErroGeral(mensagemErro(e, 'Erro ao criar cliente')),
   });
 
   const handleBuscarCnpj = async () => {
@@ -73,8 +72,7 @@ export function NovoClienteModal({ onClose, onSuccess }: Props) {
       if (dados.telefone) setValue('telefone', dados.telefone);
       if (dados.email) setValue('email', dados.email);
     } catch (e) {
-      const axiosError = e as AxiosError<ErroResponse>;
-      setErroCnpj(axiosError.response?.data?.mensagem || 'Erro ao consultar CNPJ');
+      setErroCnpj(mensagemErro(e, 'Erro ao consultar CNPJ'));
     } finally {
       setBuscandoCnpj(false);
     }
@@ -89,24 +87,15 @@ export function NovoClienteModal({ onClose, onSuccess }: Props) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between p-6 border-b border-slate-200">
-          <h2 className="text-lg font-bold text-slate-900">Novo Cliente</h2>
-          <button
-            onClick={onClose}
-            className="text-slate-400 hover:text-slate-600 transition-colors"
-          >
-            <X size={20} />
-          </button>
-        </div>
-
-        <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-4">
+    <Modal title="Novo Cliente" onClose={onClose} size="2xl">
+        <form onSubmit={handleSubmit(onSubmit)} className="p-4 sm:p-6 space-y-4">
           <div className="flex gap-2 items-end">
             <div className="flex-1">
               <Input
                 label="CNPJ"
                 placeholder="00.000.000/0000-00"
+                inputMode="numeric"
+                autoComplete="off"
                 error={errors.cnpj?.message || erroCnpj || undefined}
                 {...register('cnpj')}
               />
@@ -160,9 +149,10 @@ export function NovoClienteModal({ onClose, onSuccess }: Props) {
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Input
               label="Telefone"
+              type="tel"
               error={errors.telefone?.message}
               {...register('telefone')}
             />
@@ -174,13 +164,9 @@ export function NovoClienteModal({ onClose, onSuccess }: Props) {
             />
           </div>
 
-          {erroGeral && (
-            <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg p-3">
-              {erroGeral}
-            </div>
-          )}
+          {erroGeral && <ErrorAlert>{erroGeral}</ErrorAlert>}
 
-          <div className="flex justify-end gap-2 pt-4 border-t border-slate-200">
+          <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 pt-4 border-t border-slate-200">
             <Button type="button" variant="secondary" onClick={onClose}>
               Cancelar
             </Button>
@@ -189,7 +175,6 @@ export function NovoClienteModal({ onClose, onSuccess }: Props) {
             </Button>
           </div>
         </form>
-      </div>
-    </div>
+    </Modal>
   );
 }

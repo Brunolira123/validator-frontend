@@ -1,13 +1,13 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { AxiosError } from 'axios';
 import { Sparkles, Loader2, Edit3, RefreshCw, User, Clock } from 'lucide-react';
 import { equipamentosApi } from '../api/equipamentos';
+import { mensagemErro } from '../api/erro';
 import { Button } from './Button';
+import { ErrorAlert } from './ErrorAlert';
 import { Card } from './Card';
 import { StatusBadge } from './StatusBadge';
 import { RevisaoAnaliseModal } from './RevisaoAnaliseModal';
-import type { ErroResponse } from '../types/api';
 
 interface Props {
   equipamentoId: number;
@@ -20,7 +20,7 @@ export function AnaliseEquipamento({ equipamentoId, temFoto, editavel }: Props) 
   const [erro, setErro] = useState<string | null>(null);
   const [revisaoOpen, setRevisaoOpen] = useState(false);
 
-  const { data: analise, isLoading } = useQuery({
+  const { data: analise, isLoading, error: erroBusca, refetch } = useQuery({
     queryKey: ['analise', equipamentoId],
     queryFn: () => equipamentosApi.buscarAnalise(equipamentoId),
     enabled: !!equipamentoId,
@@ -34,10 +34,7 @@ export function AnaliseEquipamento({ equipamentoId, temFoto, editavel }: Props) 
       await queryClient.invalidateQueries({ queryKey: ['equipamentos'] });
       await queryClient.invalidateQueries({ queryKey: ['equipamento', equipamentoId] });
     },
-    onError: (e: AxiosError<ErroResponse>) => {
-      const msg = e.response?.data?.mensagem;
-      setErro(msg || 'Erro ao analisar equipamento');
-    },
+    onError: (e) => setErro(mensagemErro(e, 'Erro ao analisar equipamento')),
   });
 
   const handleReanalisar = () => {
@@ -56,6 +53,19 @@ export function AnaliseEquipamento({ equipamentoId, temFoto, editavel }: Props) 
           <span className="text-sm">Carregando análise...</span>
         </div>
       </Card>
+    );
+  }
+
+  // Sem isso, falha no GET cai no "Analisar com IA" e o usuário gasta quota à toa
+  if (erroBusca) {
+    return (
+      <div className="space-y-3">
+        <ErrorAlert>{mensagemErro(erroBusca, 'Erro ao carregar análise')}</ErrorAlert>
+        <Button variant="secondary" onClick={() => refetch()} className="w-full">
+          <RefreshCw size={16} />
+          Tentar novamente
+        </Button>
+      </div>
     );
   }
 
@@ -101,11 +111,7 @@ export function AnaliseEquipamento({ equipamentoId, temFoto, editavel }: Props) 
           </Button>
         )}
 
-        {erro && (
-          <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg p-3">
-            {erro}
-          </div>
-        )}
+        {erro && <ErrorAlert>{erro}</ErrorAlert>}
       </div>
     );
   }
@@ -113,7 +119,7 @@ export function AnaliseEquipamento({ equipamentoId, temFoto, editavel }: Props) 
   return (
     <div className="space-y-4">
       <Card>
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between gap-3 mb-4">
           <div>
             <p className="text-xs text-slate-500">Resultado</p>
             <div className="mt-1">
@@ -135,6 +141,8 @@ export function AnaliseEquipamento({ equipamentoId, temFoto, editavel }: Props) 
                 size="sm"
                 onClick={handleReanalisar}
                 loading={analisarMutation.isPending}
+                aria-label="Reanalisar com IA"
+                title="Reanalisar com IA"
               >
                 <RefreshCw size={14} />
               </Button>
@@ -158,14 +166,16 @@ export function AnaliseEquipamento({ equipamentoId, temFoto, editavel }: Props) 
                 key={idx}
                 className="flex items-start justify-between gap-3 py-2 border-b border-slate-100 last:border-0"
               >
-                <div className="flex-1">
+                <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-slate-900">{item.campo}</p>
                   <p className="text-xs text-slate-500">
                     Encontrado: {item.valorEncontrado ?? '—'} · Requisito: {item.requisito}
                   </p>
                   <p className="text-xs text-slate-400 mt-0.5">{item.observacao}</p>
                 </div>
-                <StatusBadge status={item.status} />
+                <div className="shrink-0">
+                  <StatusBadge status={item.status} />
+                </div>
               </div>
             ))}
           </div>
@@ -177,7 +187,7 @@ export function AnaliseEquipamento({ equipamentoId, temFoto, editavel }: Props) 
           </p>
         )}
 
-        <div className="flex items-center gap-4 mt-4 pt-4 border-t border-slate-100 text-xs text-slate-500">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-4 pt-4 border-t border-slate-100 text-xs text-slate-500">
           {analise.analisadoPorNome && (
             <span className="inline-flex items-center gap-1">
               <User size={12} />
@@ -196,11 +206,7 @@ export function AnaliseEquipamento({ equipamentoId, temFoto, editavel }: Props) 
         </div>
       </Card>
 
-      {erro && (
-        <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg p-3">
-          {erro}
-        </div>
-      )}
+      {erro && <ErrorAlert>{erro}</ErrorAlert>}
 
       {revisaoOpen && (
         <RevisaoAnaliseModal
@@ -209,6 +215,7 @@ export function AnaliseEquipamento({ equipamentoId, temFoto, editavel }: Props) 
           onClose={() => setRevisaoOpen(false)}
           onSuccess={async () => {
             setRevisaoOpen(false);
+            setErro(null);
             await queryClient.invalidateQueries({ queryKey: ['analise', equipamentoId] });
             await queryClient.invalidateQueries({ queryKey: ['equipamentos'] });
           }}

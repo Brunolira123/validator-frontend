@@ -1,10 +1,10 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Camera, Image as ImageIcon, Upload, X } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { AxiosError } from 'axios';
 import { equipamentosApi } from '../api/equipamentos';
+import { mensagemErro } from '../api/erro';
 import { Button } from './Button';
-import type{ ErroResponse } from '../types/api';
+import { ErrorAlert } from './ErrorAlert';
 
 interface Props {
   equipamentoId: number;
@@ -20,46 +20,47 @@ async function comprimirImagem(file: File): Promise<File> {
 
   return new Promise((resolve) => {
     const img = new Image();
-    const reader = new FileReader();
+    // Object URL em vez de data URL: evita string base64 de ~13MB na memória do celular
+    const src = URL.createObjectURL(file);
 
-    reader.onload = (e) => {
-      img.onload = () => {
-        const MAX = 1920;
-        let { width, height } = img;
+    img.onload = () => {
+      URL.revokeObjectURL(src);
+      const MAX = 1920;
+      let { width, height } = img;
 
-        if (width > MAX || height > MAX) {
-          if (width > height) {
-            height = Math.round((height * MAX) / width);
-            width = MAX;
-          } else {
-            width = Math.round((width * MAX) / height);
-            height = MAX;
-          }
+      if (width > MAX || height > MAX) {
+        if (width > height) {
+          height = Math.round((height * MAX) / width);
+          width = MAX;
+        } else {
+          width = Math.round((width * MAX) / height);
+          height = MAX;
         }
+      }
 
-        const canvas = document.createElement('canvas');
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext('2d');
-        if (!ctx) return resolve(file);
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return resolve(file);
 
-        ctx.drawImage(img, 0, 0, width, height);
+      ctx.drawImage(img, 0, 0, width, height);
 
-        canvas.toBlob(
-          (blob) => {
-            if (!blob) return resolve(file);
-            const nome = file.name.replace(/\.\w+$/, '.jpg');
-            resolve(new File([blob], nome, { type: 'image/jpeg' }));
-          },
-          'image/jpeg',
-          0.8
-        );
-      };
-      img.onerror = () => resolve(file);
-      img.src = e.target?.result as string;
+      canvas.toBlob(
+        (blob) => {
+          if (!blob) return resolve(file);
+          const nome = file.name.replace(/\.\w+$/, '.jpg');
+          resolve(new File([blob], nome, { type: 'image/jpeg' }));
+        },
+        'image/jpeg',
+        0.8
+      );
     };
-    reader.onerror = () => resolve(file);
-    reader.readAsDataURL(file);
+    img.onerror = () => {
+      URL.revokeObjectURL(src);
+      resolve(file);
+    };
+    img.src = src;
   });
 }
 
@@ -72,6 +73,13 @@ export function UploadFoto({ equipamentoId, onUploadSuccess }: Props) {
   const [comprimindo, setComprimindo] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
 
+  // Libera o preview anterior ao trocar de foto e ao desmontar
+  useEffect(() => {
+    return () => {
+      if (preview) URL.revokeObjectURL(preview);
+    };
+  }, [preview]);
+
   const uploadMutation = useMutation({
     mutationFn: (file: File) => equipamentosApi.uploadFoto(equipamentoId, file),
     onSuccess: async () => {
@@ -83,10 +91,7 @@ export function UploadFoto({ equipamentoId, onUploadSuccess }: Props) {
       setErro(null);
       onUploadSuccess?.();
     },
-    onError: (e: AxiosError<ErroResponse>) => {
-      const msg = e.response?.data?.mensagem;
-      setErro(msg || 'Erro ao enviar foto');
-    },
+    onError: (e) => setErro(mensagemErro(e, 'Erro ao enviar foto')),
   });
 
   const handleFile = async (file: File) => {
@@ -96,10 +101,7 @@ export function UploadFoto({ equipamentoId, onUploadSuccess }: Props) {
     try {
       const comprimido = await comprimirImagem(file);
       setArquivo(comprimido);
-
-      const reader = new FileReader();
-      reader.onload = (e) => setPreview(e.target?.result as string);
-      reader.readAsDataURL(comprimido);
+      setPreview(URL.createObjectURL(comprimido));
     } catch {
       setErro('Falha ao processar a imagem');
     } finally {
@@ -109,6 +111,8 @@ export function UploadFoto({ equipamentoId, onUploadSuccess }: Props) {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
+    // Limpa pra permitir escolher o mesmo arquivo de novo (senão o onChange não dispara)
+    e.target.value = '';
     if (file) handleFile(file);
   };
 
@@ -119,8 +123,7 @@ export function UploadFoto({ equipamentoId, onUploadSuccess }: Props) {
   const handleCancelPreview = () => {
     setPreview(null);
     setArquivo(null);
-    if (cameraRef.current) cameraRef.current.value = '';
-    if (galeriaRef.current) galeriaRef.current.value = '';
+    setErro(null);
   };
 
   return (
@@ -144,6 +147,7 @@ export function UploadFoto({ equipamentoId, onUploadSuccess }: Props) {
       {!preview && !comprimindo && (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <button
+            type="button"
             onClick={() => cameraRef.current?.click()}
             className="flex flex-col items-center gap-2 p-6 border-2 border-dashed border-slate-300 rounded-lg hover:border-vr-500 hover:bg-vr-50 transition-colors"
           >
@@ -151,6 +155,7 @@ export function UploadFoto({ equipamentoId, onUploadSuccess }: Props) {
             <span className="text-sm font-medium text-slate-700">Tirar foto</span>
           </button>
           <button
+            type="button"
             onClick={() => galeriaRef.current?.click()}
             className="flex flex-col items-center gap-2 p-6 border-2 border-dashed border-slate-300 rounded-lg hover:border-vr-500 hover:bg-vr-50 transition-colors"
           >
@@ -172,13 +177,16 @@ export function UploadFoto({ equipamentoId, onUploadSuccess }: Props) {
             <img
               src={preview}
               alt="Preview"
-              className="w-full rounded-lg border border-slate-200"
+              className="w-full max-h-[50vh] object-contain bg-slate-50 rounded-lg border border-slate-200"
             />
             <button
+              type="button"
               onClick={handleCancelPreview}
-              className="absolute top-2 right-2 bg-white rounded-full p-1.5 shadow-md hover:bg-slate-50"
+              disabled={uploadMutation.isPending}
+              aria-label="Descartar foto"
+              className="absolute top-2 right-2 h-11 w-11 flex items-center justify-center bg-white rounded-full shadow-md hover:bg-slate-50 disabled:opacity-50"
             >
-              <X size={16} className="text-slate-700" />
+              <X size={18} className="text-slate-700" />
             </button>
           </div>
           <p className="text-xs text-slate-500 text-center">
@@ -195,11 +203,7 @@ export function UploadFoto({ equipamentoId, onUploadSuccess }: Props) {
         </div>
       )}
 
-      {erro && (
-        <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg p-3">
-          {erro}
-        </div>
-      )}
+      {erro && <ErrorAlert>{erro}</ErrorAlert>}
     </div>
   );
 }

@@ -1,16 +1,18 @@
 import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useNavigate } from 'react-router-dom';   // ← adiciona
+import { useNavigate } from 'react-router-dom';
 import { Plus } from 'lucide-react';
 import { clientesApi } from '../api/clientes';
 import { Card } from '../components/Card';
+import { ErrorAlert } from '../components/ErrorAlert';
+import { mensagemErro } from '../api/erro';
 import { Button } from '../components/Button';
 import { NovoClienteModal } from '../components/NovoClienteModal';
 
 export default function Clientes() {
   const [modalOpen, setModalOpen] = useState(false);
   const queryClient = useQueryClient();
-  const navigate = useNavigate();   // ← adiciona
+  const navigate = useNavigate();
 
   const { data: clientes, isLoading, error } = useQuery({
     queryKey: ['clientes'],
@@ -18,8 +20,8 @@ export default function Clientes() {
   });
 
   return (
-    <div className="p-8">
-      <div className="flex items-center justify-between mb-6">
+    <div>
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Clientes</h1>
           <p className="text-sm text-slate-500 mt-1">
@@ -34,11 +36,7 @@ export default function Clientes() {
 
       {isLoading && <p className="text-slate-500">Carregando...</p>}
 
-      {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg p-4">
-          Erro ao carregar clientes
-        </div>
-      )}
+      {error && <ErrorAlert>{mensagemErro(error, 'Erro ao carregar clientes')}</ErrorAlert>}
 
       {clientes && clientes.length === 0 && (
         <Card>
@@ -52,10 +50,10 @@ export default function Clientes() {
         {clientes?.map((c) => (
           <Card
             key={c.id}
-            className="cursor-pointer hover:border-vr-500 transition-colors"   // ← adiciona
-            onClick={() => navigate(`/clientes/${c.id}`)}                      // ← adiciona
+            className="cursor-pointer hover:border-vr-500 transition-colors"
+            onClick={() => navigate(`/clientes/${c.id}`)}                   
           >
-            <h3 className="font-semibold text-slate-900">{c.razaoSocial}</h3>
+            <h3 className="font-semibold text-slate-900 break-words">{c.razaoSocial}</h3>
             <p className="text-sm text-slate-500 mt-1">{c.cnpj}</p>
             {c.nomeFantasia && (
               <p className="text-xs text-slate-400 mt-1">{c.nomeFantasia}</p>

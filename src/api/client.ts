@@ -11,6 +11,11 @@ const api = axios.create({
 // Flag pra evitar loop infinito de refresh
 let refreshingPromise: Promise<string> | null = null;
 
+function encerrarSessao() {
+  useAuthStore.getState().logout();
+  window.location.href = '/login';
+}
+
 api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
   const token = useAuthStore.getState().token;
   if (token) {
@@ -22,15 +27,23 @@ api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
 api.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
-    const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
+    const originalRequest = error.config as
+      | (InternalAxiosRequestConfig & { _retry?: boolean })
+      | undefined;
     const authStore = useAuthStore.getState();
 
-    // Não tenta refresh em rotas de auth
-    if (originalRequest.url?.includes('/auth/')) {
+    // Sem config (request cancelado/erro de setup) ou rota de auth: não tenta refresh
+    if (!originalRequest || originalRequest.url?.includes('/auth/')) {
       return Promise.reject(error);
     }
 
-    if (error.response?.status === 401 && !originalRequest._retry && authStore.refreshToken) {
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      // Sem refresh token não há como recuperar a sessão
+      if (!authStore.refreshToken) {
+        encerrarSessao();
+        return Promise.reject(error);
+      }
+
       originalRequest._retry = true;
 
       if (!refreshingPromise) {
@@ -44,8 +57,7 @@ api.interceptors.response.use(
         originalRequest.headers.Authorization = `Bearer ${newToken}`;
         return api(originalRequest);
       } catch {
-        authStore.logout();
-        window.location.href = '/login';
+        encerrarSessao();
         return Promise.reject(error);
       }
     }

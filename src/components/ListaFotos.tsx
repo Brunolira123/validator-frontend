@@ -2,13 +2,15 @@ import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Image as ImageIcon } from 'lucide-react';
 import { equipamentosApi } from '../api/equipamentos';
+import { mensagemErro } from '../api/erro';
+import { ErrorAlert } from './ErrorAlert';
 
 interface Props {
   equipamentoId: number;
 }
 
 export function ListaFotos({ equipamentoId }: Props) {
-  const { data: fotos } = useQuery({
+  const { data: fotos, isLoading, error } = useQuery({
     queryKey: ['fotos', equipamentoId],
     queryFn: () => equipamentosApi.listarFotos(equipamentoId),
   });
@@ -17,26 +19,47 @@ export function ListaFotos({ equipamentoId }: Props) {
 
   useEffect(() => {
     if (!fotos) return;
-    const novosUrls: Record<number, string> = {};
     let cancelado = false;
+    const criados: string[] = [];
 
-    (async () => {
-      for (const foto of fotos) {
+    Promise.all(
+      fotos.map(async (foto) => {
         try {
           const url = await equipamentosApi.carregarFotoBlob(equipamentoId, foto.id);
-          if (!cancelado) novosUrls[foto.id] = url;
+          // Request terminou depois do cleanup: ninguém mais vai revogar esse URL
+          if (cancelado) {
+            URL.revokeObjectURL(url);
+            return null;
+          }
+          criados.push(url);
+          return [foto.id, url] as const;
         } catch {
-          // ignora
+          return null;
         }
-      }
-      if (!cancelado) setUrls(novosUrls);
-    })();
+      })
+    ).then((pares) => {
+      if (cancelado) return;
+      setUrls(Object.fromEntries(pares.filter((p) => p !== null)));
+    });
 
     return () => {
       cancelado = true;
-      Object.values(novosUrls).forEach(URL.revokeObjectURL);
+      criados.forEach(URL.revokeObjectURL);
     };
   }, [fotos, equipamentoId]);
+
+  if (isLoading) {
+    return (
+      <div className="grid grid-cols-2 gap-3">
+        <div className="w-full h-32 bg-slate-100 rounded-lg animate-pulse" />
+        <div className="w-full h-32 bg-slate-100 rounded-lg animate-pulse" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return <ErrorAlert>{mensagemErro(error, 'Erro ao carregar fotos')}</ErrorAlert>;
+  }
 
   if (!fotos || fotos.length === 0) {
     return (

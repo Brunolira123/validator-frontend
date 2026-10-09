@@ -6,17 +6,8 @@ import { AnaliseEquipamento } from './AnaliseEquipamento';
 import { Card } from './Card';
 import { StatusBadge } from './StatusBadge';
 import { levantamentosApi } from '../api/levantamentos';
-import type { EquipamentoResponse, FuncaoEquipamento } from '../types/api';
-
-const funcaoLabel: Record<FuncaoEquipamento, string> = {
-  BANCO_DADOS: 'Banco de Dados',
-  APLICACAO: 'Aplicação',
-  SERVICE_MANAGER: 'Service Manager',
-  PDV: 'PDV',
-  RETAGUARDA: 'Retaguarda',
-  CONSULTA_PRECO: 'Consulta de Preço',
-  OUTRO: 'Outro',
-};
+import { funcaoLabel } from '../labels';
+import type { EquipamentoResponse } from '../types/api';
 
 interface Props {
   equipamento: EquipamentoResponse | null;

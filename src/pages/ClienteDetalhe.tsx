@@ -3,11 +3,13 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { ArrowLeft, Plus, Building2 } from 'lucide-react';
 import { clientesApi } from '../api/clientes';
+import { mensagemErro } from '../api/erro';
 import { levantamentosApi } from '../api/levantamentos';
 import { Card } from '../components/Card';
 import { Button } from '../components/Button';
 import { NovoLevantamentoModal } from '../components/NovoLevantamentoModal';
 import { StatusLevantamentoBadge } from '../components/StatusLevantamentoBadge';
+import { ErrorAlert } from '../components/ErrorAlert';
 
 export default function ClienteDetalhe() {
   const { id } = useParams<{ id: string }>();
@@ -16,25 +18,38 @@ export default function ClienteDetalhe() {
   const queryClient = useQueryClient();
   const [modalOpen, setModalOpen] = useState(false);
 
-  const { data: cliente, isLoading: loadingCliente } = useQuery({
+  const { data: cliente, isLoading: loadingCliente, error: erroCliente } = useQuery({
     queryKey: ['cliente', clienteId],
     queryFn: () => clientesApi.buscar(clienteId),
+    enabled: !isNaN(clienteId),
   });
 
-  const { data: levantamentos, isLoading: loadingLev } = useQuery({
+  const { data: levantamentos, isLoading: loadingLev, error: erroLev } = useQuery({
     queryKey: ['levantamentos', clienteId],
     queryFn: () => levantamentosApi.listarPorCliente(clienteId),
     enabled: !isNaN(clienteId),
   });
 
-  if (loadingCliente) return <div className="p-8 text-slate-500">Carregando...</div>;
-  if (!cliente) return <div className="p-8 text-red-600">Cliente não encontrado</div>;
+  if (loadingCliente) return <p className="text-slate-500">Carregando...</p>;
+  if (!cliente) {
+    return (
+      <div className="space-y-4">
+        <ErrorAlert>
+          {erroCliente ? mensagemErro(erroCliente, 'Erro ao carregar cliente') : 'Cliente não encontrado'}
+        </ErrorAlert>
+        <Link to="/clientes" className="inline-flex items-center gap-2 text-sm text-vr-700 hover:underline">
+          <ArrowLeft size={16} />
+          Voltar para clientes
+        </Link>
+      </div>
+    );
+  }
 
   return (
-    <div className="p-8">
+    <div>
       <Link
         to="/clientes"
-        className="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-slate-700 mb-6"
+        className="inline-flex items-center gap-2 min-h-11 md:min-h-0 text-sm text-slate-500 hover:text-slate-700 mb-4 md:mb-6"
       >
         <ArrowLeft size={16} />
         Voltar para clientes
@@ -42,11 +57,11 @@ export default function ClienteDetalhe() {
 
       <Card className="mb-6">
         <div className="flex items-start gap-4">
-          <div className="bg-vr-50 p-3 rounded-lg">
+          <div className="hidden sm:block bg-vr-50 p-3 rounded-lg">
             <Building2 size={24} className="text-vr-900" />
           </div>
-          <div className="flex-1">
-            <h1 className="text-xl font-bold text-slate-900">{cliente.razaoSocial}</h1>
+          <div className="flex-1 min-w-0">
+            <h1 className="text-xl font-bold text-slate-900 break-words">{cliente.razaoSocial}</h1>
             {cliente.nomeFantasia && (
               <p className="text-sm text-slate-500">{cliente.nomeFantasia}</p>
             )}
@@ -63,7 +78,7 @@ export default function ClienteDetalhe() {
         </div>
       </Card>
 
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
         <h2 className="text-lg font-bold text-slate-900">Levantamentos</h2>
         <Button onClick={() => setModalOpen(true)}>
           <Plus size={16} />
@@ -72,6 +87,8 @@ export default function ClienteDetalhe() {
       </div>
 
       {loadingLev && <p className="text-slate-500">Carregando...</p>}
+
+      {erroLev && <ErrorAlert>{mensagemErro(erroLev, 'Erro ao carregar levantamentos')}</ErrorAlert>}
 
       {levantamentos && levantamentos.length === 0 && (
         <Card>
@@ -88,8 +105,8 @@ export default function ClienteDetalhe() {
             className="cursor-pointer hover:border-vr-500 transition-colors"
             onClick={() => navigate(`/levantamentos/${l.id}`)}
           >
-            <div className="flex items-center justify-between">
-              <div>
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
                 <p className="font-medium text-slate-900">
                   Levantamento #{l.id}
                 </p>
@@ -101,7 +118,9 @@ export default function ClienteDetalhe() {
                   Criado em {new Date(l.criadoEm).toLocaleDateString('pt-BR')}
                 </p>
               </div>
-              <StatusLevantamentoBadge status={l.status} />
+              <div className="shrink-0">
+                <StatusLevantamentoBadge status={l.status} />
+              </div>
             </div>
           </Card>
         ))}

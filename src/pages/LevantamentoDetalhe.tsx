@@ -1,14 +1,19 @@
 import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
-import { ArrowLeft, Server, Monitor, HardDrive, ShoppingCart, AlertCircle } from 'lucide-react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  ArrowLeft, Server, Monitor, HardDrive, ShoppingCart, AlertCircle, ChevronRight, Wand2,
+} from 'lucide-react';
 import { levantamentosApi } from '../api/levantamentos';
+import { mensagemErro } from '../api/erro';
 import { Card } from '../components/Card';
 import { Button } from '../components/Button';
+import { ErrorAlert } from '../components/ErrorAlert';
 import { StatusBadge } from '../components/StatusBadge';
 import { StatusLevantamentoBadge } from '../components/StatusLevantamentoBadge';
 import { EquipamentoDrawer } from '../components/EquipamentoDrawer';
-import type { CategoriaEquipamento, FuncaoEquipamento, EquipamentoResponse } from '../types/api';
+import { funcaoLabel } from '../labels';
+import type { CategoriaEquipamento, EquipamentoResponse } from '../types/api';
 
 const categoriaIcon: Record<CategoriaEquipamento, typeof Server> = {
   SERVIDOR: Server,
@@ -18,54 +23,60 @@ const categoriaIcon: Record<CategoriaEquipamento, typeof Server> = {
   OUTRO: AlertCircle,
 };
 
-const funcaoLabel: Record<FuncaoEquipamento, string> = {
-  BANCO_DADOS: 'Banco de Dados',
-  APLICACAO: 'Aplicação',
-  SERVICE_MANAGER: 'Service Manager',
-  PDV: 'PDV',
-  RETAGUARDA: 'Retaguarda',
-  CONSULTA_PRECO: 'Consulta de Preço',
-  OUTRO: 'Outro',
-};
-
 export default function LevantamentoDetalhe() {
   const { id } = useParams<{ id: string }>();
   const levantamentoId = Number(id);
+  const queryClient = useQueryClient();
   const [equipamentoSelecionado, setEquipamentoSelecionado] =
     useState<EquipamentoResponse | null>(null);
 
-  const { data: levantamento, isLoading: loadingLev } = useQuery({
+  const { data: levantamento, isLoading: loadingLev, error: erroLev } = useQuery({
     queryKey: ['levantamento', levantamentoId],
     queryFn: () => levantamentosApi.buscar(levantamentoId),
     enabled: !isNaN(levantamentoId),
   });
 
-  const { data: equipamentos, isLoading: loadingEquip } = useQuery({
+  const { data: equipamentos, isLoading: loadingEquip, error: erroEquip } = useQuery({
     queryKey: ['equipamentos', levantamentoId],
     queryFn: () => levantamentosApi.listarEquipamentos(levantamentoId),
     enabled: !isNaN(levantamentoId),
   });
 
-  if (loadingLev) return <div className="p-8 text-slate-500">Carregando...</div>;
-  if (!levantamento) return <div className="p-8 text-red-600">Levantamento não encontrado</div>;
+  const gerarMutation = useMutation({
+    mutationFn: () => levantamentosApi.gerarEquipamentos(levantamentoId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['levantamento', levantamentoId] });
+      queryClient.invalidateQueries({ queryKey: ['equipamentos', levantamentoId] });
+    },
+  });
 
+  if (loadingLev) return <p className="text-slate-500">Carregando...</p>;
+  if (!levantamento) {
+    return (
+      <ErrorAlert>
+        {erroLev ? mensagemErro(erroLev, 'Erro ao carregar levantamento') : 'Levantamento não encontrado'}
+      </ErrorAlert>
+    );
+  }
+
+  const editavel = levantamento.status === 'RASCUNHO' || levantamento.status === 'EM_ANALISE';
   const total = equipamentos?.length ?? 0;
   const atende = equipamentos?.filter((e) => e.status === 'ATENDE').length ?? 0;
   const naoAtende = equipamentos?.filter((e) => e.status === 'NAO_ATENDE').length ?? 0;
   const requerAnalise = equipamentos?.filter((e) => e.status === 'REQUER_ANALISE').length ?? 0;
 
   return (
-    <div className="p-8">
+    <div>
       <Link
         to={`/clientes/${levantamento.clienteId}`}
-        className="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-slate-700 mb-6"
+        className="inline-flex items-center gap-2 min-h-11 md:min-h-0 max-w-full text-sm text-slate-500 hover:text-slate-700 mb-4 md:mb-6"
       >
-        <ArrowLeft size={16} />
-        Voltar para {levantamento.clienteRazaoSocial}
+        <ArrowLeft size={16} className="shrink-0" />
+        <span className="truncate">Voltar para {levantamento.clienteRazaoSocial}</span>
       </Link>
 
-      <div className="flex items-start justify-between mb-6">
-        <div>
+      <div className="flex flex-wrap items-start justify-between gap-3 mb-6">
+        <div className="min-w-0">
           <h1 className="text-2xl font-bold text-slate-900">
             Levantamento #{levantamento.id}
           </h1>
@@ -104,7 +115,7 @@ export default function LevantamentoDetalhe() {
 
       {/* Resumo dos resultados */}
       {total > 0 && (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-6">
           <Card>
             <p className="text-xs text-slate-500">Total</p>
             <p className="text-2xl font-bold text-slate-900">{total}</p>
@@ -131,11 +142,24 @@ export default function LevantamentoDetalhe() {
 
       {loadingEquip && <p className="text-slate-500">Carregando...</p>}
 
+      {erroEquip && (
+        <ErrorAlert>{mensagemErro(erroEquip, 'Erro ao carregar equipamentos')}</ErrorAlert>
+      )}
+
       {equipamentos && equipamentos.length === 0 && (
         <Card>
-          <p className="text-slate-500 text-center py-8">
-            Nenhum equipamento gerado. Clique em "Gerar Equipamentos".
-          </p>
+          <div className="text-center py-6 space-y-4">
+            <p className="text-slate-500">Nenhum equipamento gerado.</p>
+            {editavel && (
+              <Button onClick={() => gerarMutation.mutate()} loading={gerarMutation.isPending}>
+                <Wand2 size={16} />
+                Gerar equipamentos
+              </Button>
+            )}
+            {gerarMutation.error && (
+              <ErrorAlert>{mensagemErro(gerarMutation.error, 'Erro ao gerar equipamentos')}</ErrorAlert>
+            )}
+          </div>
         </Card>
       )}
 
@@ -143,30 +167,36 @@ export default function LevantamentoDetalhe() {
         {equipamentos?.map((e) => {
           const Icon = categoriaIcon[e.categoria];
           return (
-            <Card key={e.id}>
-              <div className="flex items-center gap-4">
-                <div className="bg-slate-50 p-3 rounded-lg">
-                  <Icon size={20} className="text-slate-700" />
+            <button
+              key={e.id}
+              type="button"
+              onClick={() => setEquipamentoSelecionado(e)}
+              className="block w-full text-left rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-vr-500"
+            >
+              <Card className="hover:border-vr-500 transition-colors">
+                <div className="flex items-center gap-3 sm:gap-4">
+                  <div className="bg-slate-50 p-2.5 sm:p-3 rounded-lg shrink-0">
+                    <Icon size={20} className="text-slate-700" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-slate-900">
+                      {e.categoria} {e.sequencia}
+                    </p>
+                    <p className="text-sm text-slate-500">
+                      {funcaoLabel[e.funcao]}
+                      {e.qtdFotos > 0 && ` · ${e.qtdFotos} foto(s)`}
+                    </p>
+                    <div className="mt-2 sm:hidden">
+                      <StatusBadge status={e.status} />
+                    </div>
+                  </div>
+                  <div className="hidden sm:block shrink-0">
+                    <StatusBadge status={e.status} />
+                  </div>
+                  <ChevronRight size={20} className="text-slate-400 shrink-0" />
                 </div>
-                <div className="flex-1">
-                  <p className="font-medium text-slate-900">
-                    {e.categoria} {e.sequencia}
-                  </p>
-                  <p className="text-sm text-slate-500">
-                    {funcaoLabel[e.funcao]}
-                    {e.qtdFotos > 0 && ` · ${e.qtdFotos} foto(s)`}
-                  </p>
-                </div>
-                <StatusBadge status={e.status} />
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={() => setEquipamentoSelecionado(e)}
-                >
-                  Abrir
-                </Button>
-              </div>
-            </Card>
+              </Card>
+            </button>
           );
         })}
       </div>
