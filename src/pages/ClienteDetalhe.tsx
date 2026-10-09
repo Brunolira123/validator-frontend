@@ -37,7 +37,7 @@ export default function ClienteDetalhe() {
         <ErrorAlert>
           {erroCliente ? mensagemErro(erroCliente, 'Erro ao carregar cliente') : 'Cliente não encontrado'}
         </ErrorAlert>
-        <Link to="/clientes" className="inline-flex items-center gap-2 text-sm text-vr-700 hover:underline">
+        <Link to="/" className="inline-flex items-center gap-2 text-sm text-vr-700 hover:underline">
           <ArrowLeft size={16} />
           Voltar para clientes
         </Link>
@@ -48,7 +48,7 @@ export default function ClienteDetalhe() {
   return (
     <div>
       <Link
-        to="/clientes"
+        to="/"
         className="inline-flex items-center gap-2 min-h-11 md:min-h-0 text-sm text-slate-500 hover:text-slate-700 mb-4 md:mb-6"
       >
         <ArrowLeft size={16} />

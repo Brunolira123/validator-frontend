@@ -1,6 +1,5 @@
-import { createBrowserRouter } from 'react-router-dom';
+import { createBrowserRouter, Navigate } from 'react-router-dom';
 import Login from './pages/Login';
-import Dashboard from './pages/Dashboard';
 import Clientes from './pages/Clientes';
 import Levantamentos from './pages/Levantamentos';
 import Relatorios from './pages/Relatorios';
@@ -23,8 +22,9 @@ export const router = createBrowserRouter([
       </ProtectedRoute>
     ),
     children: [
-      { index: true, element: <Dashboard /> },
-      { path: 'clientes', element: <Clientes /> },
+      { index: true, element: <Clientes /> },
+      // Rota antiga: mantém links/favoritos funcionando
+      { path: 'clientes', element: <Navigate to="/" replace /> },
       { path: 'levantamentos', element: <Levantamentos /> },
       { path: 'relatorios', element: <Relatorios /> },
       { path: 'clientes/:id', element: <ClienteDetalhe /> },

@@ -1,13 +1,14 @@
 import { useEffect, useState } from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Users, ClipboardList, FileText, LogOut, Menu, X } from 'lucide-react';
+import { Users, LogOut, Menu, X } from 'lucide-react';
 import { useAuthStore } from '../stores/authStore';
 
 const navItems = [
-  { to: '/', label: 'Dashboard', icon: LayoutDashboard, end: true },
-  { to: '/clientes', label: 'Clientes', icon: Users },
-  { to: '/levantamentos', label: 'Levantamentos', icon: ClipboardList },
-  { to: '/relatorios', label: 'Relatórios', icon: FileText },
+  { to: '/', label: 'Clientes', icon: Users, end: true },
+  // Placeholders ("Em construção") — reativar quando as telas estiverem prontas.
+  // As rotas continuam no router.
+  // { to: '/levantamentos', label: 'Levantamentos', icon: ClipboardList },
+  // { to: '/relatorios', label: 'Relatórios', icon: FileText },
 ];
 
 export function Layout() {

@@ -27,23 +27,19 @@ export default defineConfig({
             sizes: '512x512',
             type: 'image/png',
           },
+          {
+            src: '/icons/icon-512.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'maskable',
+          },
         ],
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
-        runtimeCaching: [
-          {
-            urlPattern: /^http:\/\/localhost:8080\/api\/.*/i,
-            handler: 'NetworkFirst',
-            options: {
-              cacheName: 'api-cache',
-              expiration: {
-                maxEntries: 50,
-                maxAgeSeconds: 60 * 5,
-              },
-            },
-          },
-        ],
+        // Sem cache de /api: análises e status precisam vir sempre frescos.
+        // Também impede o SW de servir index.html no lugar de chamadas à API.
+        navigateFallbackDenylist: [/^\/api\//],
       },
     }),
   ],

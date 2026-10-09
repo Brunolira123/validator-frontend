@@ -51,7 +51,7 @@ export default function Clientes() {
           <Card
             key={c.id}
             className="cursor-pointer hover:border-vr-500 transition-colors"
-            onClick={() => navigate(`/clientes/${c.id}`)}                   
+            onClick={() => navigate(`/clientes/${c.id}`)}
           >
             <h3 className="font-semibold text-slate-900 break-words">{c.razaoSocial}</h3>
             <p className="text-sm text-slate-500 mt-1">{c.cnpj}</p>
