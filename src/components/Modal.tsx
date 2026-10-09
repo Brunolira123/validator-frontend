@@ -38,20 +38,20 @@ export function Modal({ title, onClose, size = 'lg', children }: Props) {
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center sm:p-4">
-      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
+      <div className="absolute inset-0 bg-neutral-950/50 animate-fade-in" onClick={onClose} />
       <div
         role="dialog"
         aria-modal="true"
         aria-label={title}
-        className={`relative bg-white w-full h-dvh sm:h-auto sm:max-h-[90vh] sm:rounded-xl shadow-2xl flex flex-col ${sizes[size]}`}
+        className={`relative bg-white w-full h-dvh sm:h-auto sm:max-h-[90vh] sm:rounded-2xl shadow-2xl flex flex-col motion-safe:animate-slide-up ${sizes[size]}`}
       >
-        <div className="flex items-center justify-between gap-2 pl-4 pr-2 py-1 sm:pl-6 sm:pr-4 sm:py-3 border-b border-slate-200">
-          <h2 className="text-lg font-bold text-slate-900">{title}</h2>
+        <div className="flex items-center justify-between gap-2 pl-4 pr-2 py-1 sm:pl-6 sm:pr-4 sm:py-3 border-b border-neutral-200">
+          <h2 className="text-lg font-bold text-neutral-900">{title}</h2>
           <button
             type="button"
             onClick={onClose}
             aria-label="Fechar"
-            className="h-11 w-11 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-50 transition-colors"
+            className="h-11 w-11 flex items-center justify-center rounded-lg text-neutral-400 hover:text-neutral-600 hover:bg-neutral-50 transition-colors"
           >
             <X size={20} />
           </button>

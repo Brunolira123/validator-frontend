@@ -48,7 +48,7 @@ export function AnaliseEquipamento({ equipamentoId, temFoto, editavel }: Props) 
   if (isLoading) {
     return (
       <Card>
-        <div className="flex items-center gap-2 text-slate-500">
+        <div className="flex items-center gap-2 text-neutral-500">
           <Loader2 size={16} className="animate-spin" />
           <span className="text-sm">Carregando análise...</span>
         </div>
@@ -73,7 +73,7 @@ export function AnaliseEquipamento({ equipamentoId, temFoto, editavel }: Props) 
     if (!temFoto) {
       return (
         <Card>
-          <p className="text-sm text-slate-500">
+          <p className="text-sm text-neutral-500">
             Envie pelo menos uma foto antes de analisar.
           </p>
         </Card>
@@ -83,7 +83,7 @@ export function AnaliseEquipamento({ equipamentoId, temFoto, editavel }: Props) 
     if (!editavel) {
       return (
         <Card>
-          <p className="text-sm text-slate-500">
+          <p className="text-sm text-neutral-500">
             Levantamento não está editável. Não é possível analisar.
           </p>
         </Card>
@@ -95,10 +95,10 @@ export function AnaliseEquipamento({ equipamentoId, temFoto, editavel }: Props) 
         {analisarMutation.isPending ? (
           <Card>
             <div className="flex items-center gap-3">
-              <Loader2 size={20} className="animate-spin text-vr-900" />
+              <Loader2 size={20} className="animate-spin text-vr-600" />
               <div>
-                <p className="font-medium text-slate-900">Analisando...</p>
-                <p className="text-xs text-slate-500">
+                <p className="font-medium text-neutral-900">Analisando...</p>
+                <p className="text-xs text-neutral-500">
                   A IA está lendo a foto. Isso pode levar alguns segundos.
                 </p>
               </div>
@@ -121,7 +121,7 @@ export function AnaliseEquipamento({ equipamentoId, temFoto, editavel }: Props) 
       <Card>
         <div className="flex items-center justify-between gap-3 mb-4">
           <div>
-            <p className="text-xs text-slate-500">Resultado</p>
+            <p className="text-xs text-neutral-500">Resultado</p>
             <div className="mt-1">
               <StatusBadge status={analise.resultado} />
             </div>
@@ -157,21 +157,21 @@ export function AnaliseEquipamento({ equipamentoId, temFoto, editavel }: Props) 
           </div>
         )}
 
-        <p className="text-sm text-slate-600 mb-4">{analise.justificativa}</p>
+        <p className="text-sm text-neutral-600 mb-4">{analise.justificativa}</p>
 
         {analise.itens.length > 0 && (
-          <div className="space-y-2 border-t border-slate-100 pt-4">
+          <div className="space-y-2 border-t border-neutral-100 pt-4">
             {analise.itens.map((item, idx) => (
               <div
                 key={idx}
-                className="flex items-start justify-between gap-3 py-2 border-b border-slate-100 last:border-0"
+                className="flex items-start justify-between gap-3 py-2 border-b border-neutral-100 last:border-0"
               >
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-slate-900">{item.campo}</p>
-                  <p className="text-xs text-slate-500">
+                  <p className="text-sm font-medium text-neutral-900">{item.campo}</p>
+                  <p className="text-xs text-neutral-500">
                     Encontrado: {item.valorEncontrado ?? '—'} · Requisito: {item.requisito}
                   </p>
-                  <p className="text-xs text-slate-400 mt-0.5">{item.observacao}</p>
+                  <p className="text-xs text-neutral-400 mt-0.5">{item.observacao}</p>
                 </div>
                 <div className="shrink-0">
                   <StatusBadge status={item.status} />
@@ -182,12 +182,12 @@ export function AnaliseEquipamento({ equipamentoId, temFoto, editavel }: Props) 
         )}
 
         {analise.itens.length === 0 && (
-          <p className="text-xs text-slate-400 border-t border-slate-100 pt-4">
+          <p className="text-xs text-neutral-400 border-t border-neutral-100 pt-4">
             Análise feita antes da atualização. Reanalise para ver os detalhes.
           </p>
         )}
 
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-4 pt-4 border-t border-slate-100 text-xs text-slate-500">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-4 pt-4 border-t border-neutral-100 text-xs text-neutral-500">
           {analise.analisadoPorNome && (
             <span className="inline-flex items-center gap-1">
               <User size={12} />

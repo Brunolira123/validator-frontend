@@ -166,7 +166,7 @@ export function NovoClienteModal({ onClose, onSuccess }: Props) {
 
           {erroGeral && <ErrorAlert>{erroGeral}</ErrorAlert>}
 
-          <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 pt-4 border-t border-slate-200">
+          <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 pt-4 border-t border-neutral-200">
             <Button type="button" variant="secondary" onClick={onClose}>
               Cancelar
             </Button>

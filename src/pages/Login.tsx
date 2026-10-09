@@ -7,6 +7,8 @@ import { useAuthStore } from '../stores/authStore';
 import { mensagemErro } from '../api/erro';
 import { Input } from '../components/Input';
 import { ErrorAlert } from '../components/ErrorAlert';
+import { Button } from '../components/Button';
+import { Marca } from '../components/Marca';
 
 
 const schema = z.object({
@@ -42,11 +44,21 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-vr-900 via-vr-700 to-vr-500 p-4">
-      <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl p-6 sm:p-8">
-        <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold text-vr-900">Validador VR</h1>
-          <p className="text-sm text-slate-500 mt-1">Validação de Infraestrutura</p>
+    // Fundo grafite com brilho laranja, como as seções escuras do site da VR
+    <div className="relative min-h-dvh flex items-center justify-center overflow-hidden bg-neutral-950 p-4">
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -top-40 -right-40 h-[28rem] w-[28rem] rounded-full bg-vr-500/25 blur-3xl"
+      />
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -bottom-48 -left-32 h-[24rem] w-[24rem] rounded-full bg-[#ff9e01]/10 blur-3xl"
+      />
+
+      <div className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl p-6 sm:p-8 motion-safe:animate-slide-up">
+        <div className="flex flex-col items-center text-center mb-8">
+          <Marca tema="claro" />
+          <p className="text-sm text-neutral-500 mt-4">Entre para validar a infraestrutura dos clientes</p>
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -69,13 +81,9 @@ export default function Login() {
 
           {erro && <ErrorAlert>{erro}</ErrorAlert>}
 
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="w-full min-h-11 bg-vr-900 hover:bg-vr-700 text-white font-medium py-2.5 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
+          <Button type="submit" size="lg" loading={isSubmitting} className="w-full">
             {isSubmitting ? 'Entrando...' : 'Entrar'}
-          </button>
+          </Button>
         </form>
       </div>
     </div>

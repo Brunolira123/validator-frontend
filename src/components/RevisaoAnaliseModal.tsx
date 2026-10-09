@@ -89,7 +89,7 @@ export function RevisaoAnaliseModal({ equipamentoId, analiseAtual, onClose, onSu
           })}
           className="p-4 sm:p-6 space-y-4"
         >
-          <p className="text-sm text-slate-500">
+          <p className="text-sm text-neutral-500">
             Os campos já vêm preenchidos com o que a IA leu. Corrija só o que estiver errado.
           </p>
 
@@ -98,7 +98,7 @@ export function RevisaoAnaliseModal({ equipamentoId, analiseAtual, onClose, onSu
             <Input label="Modelo" {...register('modelo')} />
           </div>
 
-          <h3 className="text-sm font-medium text-slate-700 pt-2">CPU</h3>
+          <h3 className="text-sm font-medium text-neutral-700 pt-2">CPU</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Input label="Fabricante CPU" {...register('cpuFabricante')} />
             <Input label="Modelo CPU" {...register('cpuModelo')} />
@@ -107,34 +107,34 @@ export function RevisaoAnaliseModal({ equipamentoId, analiseAtual, onClose, onSu
             <Input label="Threads" type="number" inputMode="numeric" error={errors.cpuThreads?.message} {...register('cpuThreads', { valueAsNumber: true })} />
           </div>
 
-          <h3 className="text-sm font-medium text-slate-700 pt-2">Memória e armazenamento</h3>
+          <h3 className="text-sm font-medium text-neutral-700 pt-2">Memória e armazenamento</h3>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <Input label="RAM (GB)" type="number" inputMode="numeric" error={errors.ramGb?.message} {...register('ramGb', { valueAsNumber: true })} />
             <Input label="Tipo disco" placeholder="SSD / HDD" {...register('armazenamentoTipo')} />
             <Input label="Capacidade (GB)" type="number" inputMode="numeric" error={errors.armazenamentoGb?.message} {...register('armazenamentoGb', { valueAsNumber: true })} />
           </div>
 
-          <h3 className="text-sm font-medium text-slate-700 pt-2">Sistema operacional</h3>
+          <h3 className="text-sm font-medium text-neutral-700 pt-2">Sistema operacional</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Input label="Nome" {...register('soNome')} />
             <Input label="Versão" {...register('soVersao')} />
           </div>
 
           <div>
-            <label htmlFor="observacoes" className="block text-sm font-medium text-slate-700 mb-1">
+            <label htmlFor="observacoes" className="block text-sm font-medium text-neutral-700 mb-1">
               Observações
             </label>
             <textarea
               id="observacoes"
               {...register('observacoes')}
               rows={3}
-              className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-vr-500"
+              className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-vr-500"
             />
           </div>
 
           {erro && <ErrorAlert>{erro}</ErrorAlert>}
 
-          <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 pt-4 border-t border-slate-200">
+          <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 pt-4 border-t border-neutral-200">
             <Button type="button" variant="secondary" onClick={onClose}>
               Cancelar
             </Button>

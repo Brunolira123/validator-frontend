@@ -12,8 +12,8 @@ export default defineConfig({
         name: 'Validador de Infraestrutura VR',
         short_name: 'Validador VR',
         description: 'Levantamento e validação de infraestrutura para clientes VR',
-        theme_color: '#003d7a',
-        background_color: '#ffffff',
+        theme_color: '#171717',
+        background_color: '#171717',
         display: 'standalone',
         start_url: '/',
         icons: [
@@ -36,7 +36,7 @@ export default defineConfig({
         ],
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
         // Sem cache de /api: análises e status precisam vir sempre frescos.
         // Também impede o SW de servir index.html no lugar de chamadas à API.
         navigateFallbackDenylist: [/^\/api\//],

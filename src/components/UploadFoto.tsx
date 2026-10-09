@@ -149,24 +149,24 @@ export function UploadFoto({ equipamentoId, onUploadSuccess }: Props) {
           <button
             type="button"
             onClick={() => cameraRef.current?.click()}
-            className="flex flex-col items-center gap-2 p-6 border-2 border-dashed border-slate-300 rounded-lg hover:border-vr-500 hover:bg-vr-50 transition-colors"
+            className="flex flex-col items-center gap-2 p-6 border-2 border-dashed border-neutral-300 rounded-lg hover:border-vr-500 hover:bg-vr-50 transition-colors"
           >
-            <Camera size={24} className="text-slate-400" />
-            <span className="text-sm font-medium text-slate-700">Tirar foto</span>
+            <Camera size={24} className="text-neutral-400" />
+            <span className="text-sm font-medium text-neutral-700">Tirar foto</span>
           </button>
           <button
             type="button"
             onClick={() => galeriaRef.current?.click()}
-            className="flex flex-col items-center gap-2 p-6 border-2 border-dashed border-slate-300 rounded-lg hover:border-vr-500 hover:bg-vr-50 transition-colors"
+            className="flex flex-col items-center gap-2 p-6 border-2 border-dashed border-neutral-300 rounded-lg hover:border-vr-500 hover:bg-vr-50 transition-colors"
           >
-            <ImageIcon size={24} className="text-slate-400" />
-            <span className="text-sm font-medium text-slate-700">Escolher da galeria</span>
+            <ImageIcon size={24} className="text-neutral-400" />
+            <span className="text-sm font-medium text-neutral-700">Escolher da galeria</span>
           </button>
         </div>
       )}
 
       {comprimindo && (
-        <div className="text-center py-6 text-slate-500 text-sm">
+        <div className="text-center py-6 text-neutral-500 text-sm">
           Processando imagem...
         </div>
       )}
@@ -177,19 +177,19 @@ export function UploadFoto({ equipamentoId, onUploadSuccess }: Props) {
             <img
               src={preview}
               alt="Preview"
-              className="w-full max-h-[50vh] object-contain bg-slate-50 rounded-lg border border-slate-200"
+              className="w-full max-h-[50vh] object-contain bg-neutral-50 rounded-lg border border-neutral-200"
             />
             <button
               type="button"
               onClick={handleCancelPreview}
               disabled={uploadMutation.isPending}
               aria-label="Descartar foto"
-              className="absolute top-2 right-2 h-11 w-11 flex items-center justify-center bg-white rounded-full shadow-md hover:bg-slate-50 disabled:opacity-50"
+              className="absolute top-2 right-2 h-11 w-11 flex items-center justify-center bg-white rounded-full shadow-md hover:bg-neutral-50 disabled:opacity-50"
             >
-              <X size={18} className="text-slate-700" />
+              <X size={18} className="text-neutral-700" />
             </button>
           </div>
-          <p className="text-xs text-slate-500 text-center">
+          <p className="text-xs text-neutral-500 text-center">
             {arquivo && `${(arquivo.size / 1024 / 1024).toFixed(2)} MB`}
           </p>
           <Button

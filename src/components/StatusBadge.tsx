@@ -1,7 +1,7 @@
 import type { StatusAnalise } from '../types/api';
 
 const config: Record<StatusAnalise, { label: string; className: string }> = {
-  PENDENTE: { label: 'Pendente', className: 'bg-slate-100 text-slate-700' },
+  PENDENTE: { label: 'Pendente', className: 'bg-neutral-100 text-neutral-700' },
   EM_ANALISE: { label: 'Em análise', className: 'bg-blue-100 text-blue-700' },
   ATENDE: { label: '🟢 Atende', className: 'bg-green-100 text-green-700' },
   NAO_ATENDE: { label: '🔴 Não atende', className: 'bg-red-100 text-red-700' },

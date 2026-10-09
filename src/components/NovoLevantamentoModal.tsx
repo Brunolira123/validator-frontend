@@ -95,7 +95,7 @@ export function NovoLevantamentoModal({ clienteId, onClose, onSuccess }: Props) 
         })}
         className="p-4 sm:p-6 space-y-4"
       >
-        <p className="text-sm text-slate-500">
+        <p className="text-sm text-neutral-500">
           Informe o dimensionamento do ambiente que será implantado.
         </p>
 
@@ -128,13 +128,13 @@ export function NovoLevantamentoModal({ clienteId, onClose, onSuccess }: Props) 
 
         <label
           htmlFor="consultaPreco"
-          className="flex items-center gap-3 min-h-11 text-sm text-slate-700 cursor-pointer"
+          className="flex items-center gap-3 min-h-11 text-sm text-neutral-700 cursor-pointer"
         >
           <input
             type="checkbox"
             id="consultaPreco"
             {...register('consultaPreco')}
-            className="w-5 h-5 text-vr-900 border-slate-300 rounded focus:ring-vr-500"
+            className="w-5 h-5 text-vr-600 border-neutral-300 rounded focus:ring-vr-500"
           />
           Possui consulta de preço?
         </label>
@@ -151,21 +151,21 @@ export function NovoLevantamentoModal({ clienteId, onClose, onSuccess }: Props) 
         )}
 
         <div>
-          <label htmlFor="outros" className="block text-sm font-medium text-slate-700 mb-1">
+          <label htmlFor="outros" className="block text-sm font-medium text-neutral-700 mb-1">
             Outros (opcional)
           </label>
           <textarea
             id="outros"
             {...register('outros')}
             rows={3}
-            className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-vr-500"
+            className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-vr-500"
             placeholder="Informações adicionais..."
           />
         </div>
 
         {erro && <ErrorAlert>{erro}</ErrorAlert>}
 
-        <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 pt-4 border-t border-slate-200">
+        <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 pt-4 border-t border-neutral-200">
           <Button type="button" variant="secondary" onClick={onClose}>
             Cancelar
           </Button>
