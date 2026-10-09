@@ -18,6 +18,11 @@ export const clientesApi = {
     return data;
   },
 
+  // Soft delete (só ADMIN): arquiva também os levantamentos do cliente
+  excluir: async (id: number): Promise<void> => {
+    await api.delete(`/clientes/${id}`);
+  },
+
   consultarCnpj: async (cnpj: string): Promise<CnpjResponseDTO> => {
     const limpo = cnpj.replace(/\D/g, '');
     const { data } = await api.get<CnpjResponseDTO>(`/clientes/consulta-cnpj/${limpo}`);

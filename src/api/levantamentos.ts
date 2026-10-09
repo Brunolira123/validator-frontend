@@ -47,6 +47,11 @@ export const levantamentosApi = {
     return data;
   },
 
+  // Soft delete (só ADMIN)
+  excluir: async (id: number): Promise<void> => {
+    await api.delete(`/levantamentos/${id}`);
+  },
+
   listarPorCliente: async (clienteId: number): Promise<LevantamentoResponse[]> => {
   const { data } = await api.get<LevantamentoResponse[]>(`/levantamentos`, {
     params: { clienteId },

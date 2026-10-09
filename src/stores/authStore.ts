@@ -69,3 +69,6 @@ export const useAuthStore = create<AuthState>()(
     }
   )
 );
+
+/** Exclusões (soft delete) são só para ADMIN; o backend também barra (403). */
+export const useIsAdmin = () => useAuthStore((s) => s.usuario?.perfil === 'ADMIN');

@@ -26,6 +26,11 @@ export const equipamentosApi = {
     return URL.createObjectURL(response.data);
   },
 
+  // Soft delete (só ADMIN, levantamento editável)
+  excluirFoto: async (equipamentoId: number, fotoId: number): Promise<void> => {
+    await api.delete(`/equipamentos/${equipamentoId}/fotos/${fotoId}`);
+  },
+
   // 204 (equipamento ainda não analisado) vira null
   buscarAnalise: async (equipamentoId: number): Promise<AnaliseResponse | null> => {
     const response = await api.get<AnaliseResponse>(`/equipamentos/${equipamentoId}/analise`);

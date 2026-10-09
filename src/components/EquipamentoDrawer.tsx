@@ -7,6 +7,7 @@ import { Card } from './Card';
 import { StatusBadge } from './StatusBadge';
 import { levantamentosApi } from '../api/levantamentos';
 import { funcaoLabel } from '../labels';
+import { useIsAdmin } from '../stores/authStore';
 import type { EquipamentoResponse } from '../types/api';
 
 interface Props {
@@ -16,6 +17,7 @@ interface Props {
 }
 
 export function EquipamentoDrawer({ equipamento, levantamentoId, onClose }: Props) {
+  const isAdmin = useIsAdmin();
   const { data: levantamento } = useQuery({
     queryKey: ['levantamento', levantamentoId],
     queryFn: () => levantamentosApi.buscar(levantamentoId),
@@ -47,27 +49,27 @@ export function EquipamentoDrawer({ equipamento, levantamentoId, onClose }: Prop
       {equipamentoAtualizado && (
         <div className="space-y-6">
           <div>
-            <p className="text-sm text-slate-500">Função</p>
-            <p className="font-medium text-slate-900">
+            <p className="text-sm text-neutral-500">Função</p>
+            <p className="font-medium text-neutral-900">
               {funcaoLabel[equipamentoAtualizado.funcao]}
             </p>
           </div>
 
           <div>
-            <p className="text-sm text-slate-500 mb-2">Status</p>
+            <p className="text-sm text-neutral-500 mb-2">Status</p>
             <StatusBadge status={equipamentoAtualizado.status} />
           </div>
 
           <div>
             <div className="flex items-center justify-between mb-3">
-              <h3 className="font-medium text-slate-900">Adicionar foto</h3>
+              <h3 className="font-medium text-neutral-900">Adicionar foto</h3>
             </div>
 
             {editavel ? (
               <UploadFoto equipamentoId={equipamentoAtualizado.id} />
             ) : (
               <Card>
-                <p className="text-sm text-slate-500">
+                <p className="text-sm text-neutral-500">
                   Levantamento não está editável. Não é possível enviar fotos.
                 </p>
               </Card>
@@ -76,16 +78,16 @@ export function EquipamentoDrawer({ equipamento, levantamentoId, onClose }: Prop
 
           <div>
             <div className="flex items-center justify-between mb-3">
-              <h3 className="font-medium text-slate-900">Fotos enviadas</h3>
-              <span className="text-xs text-slate-500">
+              <h3 className="font-medium text-neutral-900">Fotos enviadas</h3>
+              <span className="text-xs text-neutral-500">
                 {equipamentoAtualizado.qtdFotos} foto(s)
               </span>
             </div>
-            <ListaFotos equipamentoId={equipamentoAtualizado.id} />
+            <ListaFotos equipamentoId={equipamentoAtualizado.id} podeExcluir={isAdmin && editavel} />
           </div>
 
           <div>
-            <h3 className="font-medium text-slate-900 mb-3">Análise</h3>
+            <h3 className="font-medium text-neutral-900 mb-3">Análise</h3>
             <AnaliseEquipamento
               equipamentoId={equipamentoAtualizado.id}
               temFoto={equipamentoAtualizado.qtdFotos > 0}
