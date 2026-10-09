@@ -129,6 +129,28 @@ export interface ResultadoAnaliseDTO {
   justificativa: string;
 }
 
+export interface AnaliseResponse {
+  resultado: StatusAnalise;
+  justificativa: string | null;
+  itens: ItemAvaliadoDTO[];
+  fabricante: string | null;
+  modelo: string | null;
+  cpuFabricante: string | null;
+  cpuModelo: string | null;
+  cpuGeracao: number | null;
+  cpuCores: number | null;
+  cpuThreads: number | null;
+  ramGb: number | null;
+  armazenamentoTipo: string | null;
+  armazenamentoGb: number | null;
+  soNome: string | null;
+  soVersao: string | null;
+  confiancaGlobal: number | null;
+  analisadoEm: string | null;
+  analisadoPorNome: string | null;
+  revisada: boolean;
+}
+
 export interface RevisaoAnaliseRequest {
   fabricante?: string;
   modelo?: string;

@@ -7,7 +7,7 @@ import { X } from 'lucide-react';
 import { equipamentosApi } from '../api/equipamentos';
 import { Button } from './Button';
 import { Input } from './Input';
-import type{ ErroResponse, ResultadoAnaliseDTO } from '../types/api';
+import type { AnaliseResponse, ErroResponse, ResultadoAnaliseDTO } from '../types/api';
 
 const schema = z.object({
   fabricante: z.string().optional(),
@@ -29,24 +29,41 @@ type FormData = z.infer<typeof schema>;
 
 interface Props {
   equipamentoId: number;
+  analiseAtual?: AnaliseResponse | null;
   onClose: () => void;
   onSuccess: (resultado: ResultadoAnaliseDTO) => void;
 }
 
-export function RevisaoAnaliseModal({ equipamentoId, onClose, onSuccess }: Props) {
+export function RevisaoAnaliseModal({ equipamentoId, analiseAtual, onClose, onSuccess }: Props) {
   const {
     register,
     handleSubmit,
     formState: { errors },
   } = useForm<FormData>({
     resolver: zodResolver(schema),
+    defaultValues: {
+      fabricante: analiseAtual?.fabricante ?? '',
+      modelo: analiseAtual?.modelo ?? '',
+      cpuFabricante: analiseAtual?.cpuFabricante ?? '',
+      cpuModelo: analiseAtual?.cpuModelo ?? '',
+      cpuGeracao: analiseAtual?.cpuGeracao ?? undefined,
+      cpuCores: analiseAtual?.cpuCores ?? undefined,
+      cpuThreads: analiseAtual?.cpuThreads ?? undefined,
+      ramGb: analiseAtual?.ramGb ?? undefined,
+      armazenamentoTipo: analiseAtual?.armazenamentoTipo ?? '',
+      armazenamentoGb: analiseAtual?.armazenamentoGb ?? undefined,
+      soNome: analiseAtual?.soNome ?? '',
+      soVersao: analiseAtual?.soVersao ?? '',
+      observacoes: '',
+    },
   });
 
   const revisarMutation = useMutation({
     mutationFn: (data: FormData) => {
-      // Remove campos NaN (input vazio)
       const payload = Object.fromEntries(
-        Object.entries(data).filter(([, v]) => v !== undefined && v !== '' && !(typeof v === 'number' && isNaN(v)))
+        Object.entries(data).filter(
+          ([, v]) => v !== undefined && v !== '' && !(typeof v === 'number' && isNaN(v))
+        )
       );
       return equipamentosApi.revisar(equipamentoId, payload);
     },
@@ -68,7 +85,7 @@ export function RevisaoAnaliseModal({ equipamentoId, onClose, onSuccess }: Props
 
         <form onSubmit={handleSubmit((d) => revisarMutation.mutate(d))} className="p-6 space-y-4">
           <p className="text-sm text-slate-500">
-            Corrija os campos que a IA leu errado. Campos vazios não sobrescrevem o valor atual.
+            Os campos já vêm preenchidos com o que a IA leu. Corrija só o que estiver errado.
           </p>
 
           <div className="grid grid-cols-2 gap-4">

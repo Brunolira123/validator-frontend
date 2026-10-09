@@ -1,5 +1,5 @@
 import api from './client';
-import type { FotoResponse, ResultadoAnaliseDTO, RevisaoAnaliseRequest } from '../types/api';
+import type { AnaliseResponse, FotoResponse, ResultadoAnaliseDTO, RevisaoAnaliseRequest } from '../types/api';
 
 export const equipamentosApi = {
   uploadFoto: async (equipamentoId: number, file: File): Promise<FotoResponse> => {
@@ -24,6 +24,12 @@ export const equipamentosApi = {
       { responseType: 'blob' }
     );
     return URL.createObjectURL(response.data);
+  },
+
+  // 204 (equipamento ainda não analisado) vira null
+  buscarAnalise: async (equipamentoId: number): Promise<AnaliseResponse | null> => {
+    const response = await api.get<AnaliseResponse>(`/equipamentos/${equipamentoId}/analise`);
+    return response.status === 204 ? null : response.data;
   },
 
   analisar: async (equipamentoId: number): Promise<ResultadoAnaliseDTO> => {
