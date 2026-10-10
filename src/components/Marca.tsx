@@ -5,20 +5,17 @@ interface Props {
 }
 
 /**
- * Wordmark do app. O "VR" usa o degradê do logo da VR Software (#EA5B0C → #FF9E01).
- * Se houver autorização para usar o logo oficial, troque o selo pelo SVG.
+ * Wordmark do app: ícone oficial (VRUtil.ico, o mesmo do PWA e do favicon) + nome.
  */
 export function Marca({ tema = 'escuro', compacto = false }: Props) {
   return (
     <div className="flex items-center gap-2.5">
-      <span
+      <img
+        src="/icons/icon-192.png"
+        alt=""
         aria-hidden="true"
-        className={`flex items-center justify-center rounded-lg bg-gradient-to-br from-vr-600 to-[#ff9e01] font-extrabold text-white shadow-sm ${
-          compacto ? 'h-8 w-8 text-sm' : 'h-10 w-10 text-base'
-        }`}
-      >
-        VR
-      </span>
+        className={`shrink-0 ${compacto ? 'h-8 w-8' : 'h-10 w-10'}`}
+      />
       <div className="leading-tight">
         <p className={`font-bold ${compacto ? 'text-base' : 'text-lg'} ${tema === 'escuro' ? 'text-white' : 'text-neutral-900'}`}>
           Validador

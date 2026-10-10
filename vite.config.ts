@@ -7,7 +7,8 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.ico', 'icons/*.png'],
+      // Ícones gerados a partir do VRUtil.ico oficial (laranja com engrenagem)
+      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'icons/*.png'],
       manifest: {
         name: 'Validador de Infraestrutura VR',
         short_name: 'Validador VR',
@@ -27,8 +28,15 @@ export default defineConfig({
             sizes: '512x512',
             type: 'image/png',
           },
+          // Maskable: fundo cheio no degradê do ícone (Android recorta em círculo/squircle)
           {
-            src: '/icons/icon-512.png',
+            src: '/icons/maskable-192.png',
+            sizes: '192x192',
+            type: 'image/png',
+            purpose: 'maskable',
+          },
+          {
+            src: '/icons/maskable-512.png',
             sizes: '512x512',
             type: 'image/png',
             purpose: 'maskable',
