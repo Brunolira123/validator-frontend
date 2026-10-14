@@ -6,13 +6,13 @@ PWA (React + TypeScript + Vite + Tailwind) do Validador de Infraestrutura. O bac
 
 ```bash
 npm install
-npm run dev      # http://localhost:5173 (o Vite encaminha /api para localhost:8080)
+npm run dev      # http://localhost:5173 (o Vite encaminha /api para localhost:8075)
 npm run build
 ```
 
 ## Imagem Docker (produção)
 
-Build multi-stage: Node compila o app e a imagem final é um nginx que serve o PWA e encaminha `/api/*` para o container `backend:8080` (ver `nginx.conf`). Os endpoints de debug `/api/vision` e `/api/motor` são bloqueados (404).
+Build multi-stage: Node compila o app e a imagem final é um nginx que serve o PWA e encaminha `/api/*` para o container `backend:8075` (ver `nginx.conf`). Os endpoints de debug `/api/vision` e `/api/motor` são bloqueados (404).
 
 A imagem vai para o repositório **público** `brunoliragarcia/validator-frontend` no Docker Hub, **sempre com a mesma tag do backend**: se só um dos dois mudou, os dois são publicados de novo com a tag nova.
 

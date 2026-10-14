@@ -56,7 +56,7 @@ export default defineConfig({
     port: 5173,
     proxy: {
       '/api': {
-        target: 'http://localhost:8080',
+        target: 'http://localhost:8075',
         changeOrigin: true,
         // Acessando pelo IP da rede (celular), o Origin não está na lista de CORS do backend
         // e o Spring devolve 403. Pelo proxy é mesma origem, então o Origin pode ser removido.
