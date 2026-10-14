@@ -14,17 +14,17 @@ npm run build
 
 Build multi-stage: Node compila o app e a imagem final é um nginx que serve o PWA e encaminha `/api/*` para o container `backend:8080` (ver `nginx.conf`). Os endpoints de debug `/api/vision` e `/api/motor` são bloqueados (404).
 
-A imagem vai para o repositório **público** `brunoliraarcia/validator-frontend` no Docker Hub, **sempre com a mesma tag do backend**: se só um dos dois mudou, os dois são publicados de novo com a tag nova.
+A imagem vai para o repositório **público** `brunoliragarcia/validator-frontend` no Docker Hub, **sempre com a mesma tag do backend**: se só um dos dois mudou, os dois são publicados de novo com a tag nova.
 
 ```bash
 TAG=1.0.0
 
-docker login -u brunoliraarcia
-docker build -t brunoliraarcia/validator-frontend:$TAG .
-docker push brunoliraarcia/validator-frontend:$TAG
+docker login -u brunoliragarcia
+docker build -t brunoliragarcia/validator-frontend:$TAG .
+docker push brunoliragarcia/validator-frontend:$TAG
 ```
 
-Para testar a imagem localmente, sem o backend: `docker run --rm -p 8080:80 brunoliraarcia/validator-frontend:$TAG`. As telas abrem, mas as chamadas a `/api` retornam 502.
+Para testar a imagem localmente, sem o backend: `docker run --rm -p 8080:80 brunoliragarcia/validator-frontend:$TAG`. As telas abrem, mas as chamadas a `/api` retornam 502.
 
 Como subir no servidor e atualizar: README do `validator-infra`, seção **Deploy em produção**.
 
