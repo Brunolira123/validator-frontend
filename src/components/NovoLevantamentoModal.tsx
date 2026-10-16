@@ -87,7 +87,7 @@ export function NovoLevantamentoModal({ clienteId, onClose, onSuccess }: Props) 
   });
 
   return (
-    <Modal title="Novo Levantamento" onClose={onClose}>
+    <Modal title="Nova validação de servidor" onClose={onClose}>
       <form
         onSubmit={handleSubmit((d) => {
           setErro(null);

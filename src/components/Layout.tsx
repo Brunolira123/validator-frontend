@@ -1,17 +1,9 @@
 import { useEffect, useState } from 'react';
-import { Outlet, NavLink, useLocation, useNavigate } from 'react-router-dom';
+import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { Marca } from './Marca';
-import { Users, LogOut, Menu, X } from 'lucide-react';
+import { House, LogOut, Menu, X } from 'lucide-react';
 import { useAuthStore } from '../stores/authStore';
-
-// `ativoEm`: rotas de detalhe que também acendem o item (o fluxo cliente → levantamento é todo de Clientes)
-const navItems = [
-  { to: '/', label: 'Clientes', icon: Users, end: true, ativoEm: /^\/(clientes|levantamentos)\/\d+/ },
-  // Placeholders ("Em construção") — reativar quando as telas estiverem prontas.
-  // As rotas continuam no router.
-  // { to: '/levantamentos', label: 'Levantamentos', icon: ClipboardList },
-  // { to: '/relatorios', label: 'Relatórios', icon: FileText },
-];
+import { modulosDoPerfil } from '../modulos';
 
 function iniciais(nome?: string) {
   if (!nome) return '?';
@@ -23,8 +15,14 @@ export function Layout() {
   const usuario = useAuthStore((s) => s.usuario);
   const logout = useAuthStore((s) => s.logout);
   const navigate = useNavigate();
-  const { pathname } = useLocation();
   const [menuAberto, setMenuAberto] = useState(false);
+
+  // Início + módulos do perfil. `end` no Início: senão ele acenderia em qualquer rota.
+  // Os módulos acendem em tudo abaixo da rota base (ex.: /comercial/clientes/12).
+  const navItems = [
+    { to: '/', label: 'Início', icon: House, end: true },
+    ...modulosDoPerfil(usuario?.perfil).map((m) => ({ to: m.rota, label: m.label, icon: m.icone, end: false })),
+  ];
 
   useEffect(() => {
     if (!menuAberto) return;
@@ -81,14 +79,13 @@ export function Layout() {
         </div>
 
         <nav className="flex-1 px-3 py-2 space-y-1 overflow-y-auto">
-          {navItems.map(({ to, label, icon: Icon, end, ativoEm }) => (
+          {navItems.map(({ to, label, icon: Icon, end }) => (
             <NavLink
               key={to}
               to={to}
               end={end}
               onClick={() => setMenuAberto(false)}
-              className={({ isActive: ativoRota }) => {
-                const isActive = ativoRota || ativoEm.test(pathname);
+              className={({ isActive }) => {
                 return `relative flex items-center gap-3 px-3 py-3 md:py-2.5 rounded-lg text-sm font-medium transition-colors ${
                   isActive
                     ? 'bg-white/[0.08] text-white before:absolute before:left-0 before:top-2 before:bottom-2 before:w-1 before:rounded-full before:bg-vr-500'
@@ -98,7 +95,7 @@ export function Layout() {
             >
               {({ isActive }) => (
                 <>
-                  <Icon size={18} className={isActive || ativoEm.test(pathname) ? 'text-vr-400' : ''} />
+                  <Icon size={18} className={isActive ? 'text-vr-400' : ''} />
                   <span>{label}</span>
                 </>
               )}

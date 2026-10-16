@@ -70,7 +70,7 @@ export default function LevantamentoDetalhe() {
       queryClient.removeQueries({ queryKey: ['levantamento', levantamentoId] });
       queryClient.removeQueries({ queryKey: ['equipamentos', levantamentoId] });
       queryClient.invalidateQueries({ queryKey: ['levantamentos', clienteId] });
-      navigate(clienteId ? `/clientes/${clienteId}` : '/', { replace: true });
+      navigate(clienteId ? `/comercial/clientes/${clienteId}` : '/comercial/clientes', { replace: true });
     },
   });
 
@@ -92,7 +92,7 @@ export default function LevantamentoDetalhe() {
   return (
     <div>
       <Link
-        to={`/clientes/${levantamento.clienteId}`}
+        to={`/comercial/clientes/${levantamento.clienteId}`}
         className="inline-flex items-center gap-2 min-h-11 md:min-h-0 max-w-full text-sm text-neutral-500 hover:text-neutral-700 mb-4 md:mb-6"
       >
         <ArrowLeft size={16} className="shrink-0" />
@@ -243,7 +243,7 @@ export default function LevantamentoDetalhe() {
             excluirMutation.reset();
           }}
         >
-          <p>O levantamento, com equipamentos, fotos e análises, vai sumir da lista deste cliente.</p>
+          <p>O levantamento, com equipamentos, fotos e análises, vai sumir da lista deste prospect.</p>
         </ConfirmarExclusao>
       )}
 

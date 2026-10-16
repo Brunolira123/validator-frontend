@@ -4,11 +4,13 @@ export interface LoginRequest {
   senha: string;
 }
 
+export type Perfil = 'ADMIN' | 'COMERCIAL' | 'TECNICO' | 'SUPORTE' | 'DIRETORIA' | 'PROJETOS';
+
 export interface UsuarioResponse {
   id: number;
   nome: string;
   email: string;
-  perfil: 'ADMIN' | 'COMERCIAL' | 'TECNICO';
+  perfil: Perfil;
 }
 
 export interface LoginResponse {
@@ -218,4 +220,74 @@ export interface ErroResponse {
   timestamp: string;
   path: string;
   campos?: Array<{ campo: string; mensagem: string }>;
+}
+// ===== Monitoramento (agentes nos clientes) =====
+export type SituacaoMonitor = 'AGUARDANDO' | 'OK' | 'FALHA' | 'OFFLINE' | 'INATIVO';
+export type OrigemExecucao = 'AGENDADO' | 'SOB_DEMANDA';
+export type StatusPedido = 'PENDENTE' | 'ENTREGUE' | 'CONCLUIDO' | 'EXPIRADO';
+
+export interface ClienteMonitoradoRequest {
+  nome: string;
+  cnpj?: string;
+}
+
+export interface ClienteMonitoradoResponse {
+  id: number;
+  nome: string;
+  cnpj: string | null;
+  ativo: boolean;
+  situacao: SituacaoMonitor;
+  ultimoContato: string | null;
+  versaoAgente: string | null;
+  ultimaExecucaoEm: string | null;
+  totalLojas: number;
+  lojasComFalha: number;
+}
+
+export interface VerificacaoMonitor {
+  tipo: string;
+  ok: boolean;
+  referencia: string | null;
+  detalhe: string | null;
+}
+
+export interface LojaMonitorada {
+  lojaId: number;
+  cnpj: string | null;
+  descricao: string | null;
+  ok: boolean;
+  verificacoes: VerificacaoMonitor[];
+}
+
+export interface ClienteMonitoradoDetalhe {
+  cliente: ClienteMonitoradoResponse;
+  /** A última execução não conseguiu consultar o banco do cliente. */
+  erro: string | null;
+  lojas: LojaMonitorada[];
+}
+
+/** Única vez em que o token aparece. */
+export interface TokenAgenteResponse {
+  cliente: ClienteMonitoradoResponse;
+  token: string;
+}
+
+export interface ExecucaoMonitor {
+  id: number;
+  origem: OrigemExecucao;
+  executadoEm: string;
+  recebidoEm: string;
+  ok: boolean;
+  erro: string | null;
+  totalLojas: number;
+  lojasComFalha: number;
+}
+
+export interface PedidoConsulta {
+  id: number;
+  clienteId: number;
+  status: StatusPedido;
+  criadoEm: string;
+  concluidoEm: string | null;
+  execucaoId: number | null;
 }

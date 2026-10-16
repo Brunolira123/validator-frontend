@@ -18,11 +18,11 @@ export function Marca({ tema = 'escuro', compacto = false }: Props) {
       />
       <div className="leading-tight">
         <p className={`font-bold ${compacto ? 'text-base' : 'text-lg'} ${tema === 'escuro' ? 'text-white' : 'text-neutral-900'}`}>
-          Validador
+          Portal VRIP
         </p>
         {!compacto && (
           <p className={`text-xs ${tema === 'escuro' ? 'text-white/60' : 'text-neutral-500'}`}>
-            Infraestrutura
+            VR Software
           </p>
         )}
       </div>

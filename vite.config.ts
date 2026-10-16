@@ -10,9 +10,9 @@ export default defineConfig({
       // Ícones gerados a partir do VRUtil.ico oficial (laranja com engrenagem)
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'icons/*.png'],
       manifest: {
-        name: 'Validador de Infraestrutura VR',
-        short_name: 'Validador VR',
-        description: 'Levantamento e validação de infraestrutura para clientes VR',
+        name: 'Portal VRIP',
+        short_name: 'Portal VRIP',
+        description: 'Portal VRIP: módulos Comercial (Validador de Infraestrutura), Monitoramento e outros',
         theme_color: '#171717',
         background_color: '#171717',
         display: 'standalone',

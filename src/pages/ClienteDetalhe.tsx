@@ -55,7 +55,7 @@ export default function ClienteDetalhe() {
         queryClient.removeQueries({ queryKey: ['cliente', clienteId] });
         queryClient.removeQueries({ queryKey: ['levantamentos', clienteId] });
         queryClient.invalidateQueries({ queryKey: ['clientes'] });
-        navigate('/', { replace: true });
+        navigate('/comercial/clientes', { replace: true });
       } else {
         queryClient.setQueryData<LevantamentoResponse[]>(['levantamentos', clienteId], (lista) =>
           lista?.filter((l) => l.id !== alvo.levantamento.id)
@@ -75,11 +75,11 @@ export default function ClienteDetalhe() {
     return (
       <div className="space-y-4">
         <ErrorAlert>
-          {erroCliente ? mensagemErro(erroCliente, 'Erro ao carregar cliente') : 'Cliente não encontrado'}
+          {erroCliente ? mensagemErro(erroCliente, 'Erro ao carregar prospect') : 'Prospect não encontrado'}
         </ErrorAlert>
-        <Link to="/" className="inline-flex items-center gap-2 text-sm text-vr-700 font-medium hover:underline">
+        <Link to="/comercial/clientes" className="inline-flex items-center gap-2 text-sm text-vr-700 font-medium hover:underline">
           <ArrowLeft size={16} />
-          Voltar para clientes
+          Voltar para prospects
         </Link>
       </div>
     );
@@ -88,11 +88,11 @@ export default function ClienteDetalhe() {
   return (
     <div>
       <Link
-        to="/"
+        to="/comercial/clientes"
         className="inline-flex items-center gap-2 min-h-11 md:min-h-0 text-sm text-neutral-500 hover:text-neutral-700 mb-4 md:mb-6"
       >
         <ArrowLeft size={16} />
-        Voltar para clientes
+        Voltar para prospects
       </Link>
 
       <Card className="mb-6">
@@ -117,7 +117,7 @@ export default function ClienteDetalhe() {
           </div>
           {isAdmin && (
             <div className="-mr-2 -mt-2">
-              <BotaoExcluir rotulo="Excluir cliente" onClick={() => setExclusao({ tipo: 'cliente' })} />
+              <BotaoExcluir rotulo="Excluir prospect" onClick={() => setExclusao({ tipo: 'cliente' })} />
             </div>
           )}
         </div>
@@ -127,7 +127,7 @@ export default function ClienteDetalhe() {
         <h2 className="text-lg font-bold text-neutral-900">Levantamentos</h2>
         <Button onClick={() => setModalOpen(true)}>
           <Plus size={16} />
-          Novo Levantamento
+          Nova validação de servidor
         </Button>
       </div>
 
@@ -148,7 +148,7 @@ export default function ClienteDetalhe() {
           <Card
             key={l.id}
             interativo
-            onClick={() => navigate(`/levantamentos/${l.id}`)}
+            onClick={() => navigate(`/comercial/levantamentos/${l.id}`)}
           >
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
@@ -186,14 +186,14 @@ export default function ClienteDetalhe() {
           onSuccess={(levantamentoId) => {
             queryClient.invalidateQueries({ queryKey: ['levantamentos', clienteId] });
             setModalOpen(false);
-            navigate(`/levantamentos/${levantamentoId}`);
+            navigate(`/comercial/levantamentos/${levantamentoId}`);
           }}
         />
       )}
 
       {exclusao && (
         <ConfirmarExclusao
-          titulo={exclusao.tipo === 'cliente' ? 'Excluir cliente?' : `Excluir levantamento #${exclusao.levantamento.id}?`}
+          titulo={exclusao.tipo === 'cliente' ? 'Excluir prospect?' : `Excluir levantamento #${exclusao.levantamento.id}?`}
           excluindo={excluirMutation.isPending}
           erro={excluirMutation.error ? mensagemErro(excluirMutation.error, 'Erro ao excluir') : null}
           onConfirmar={() => excluirMutation.mutate(exclusao)}
@@ -205,7 +205,7 @@ export default function ClienteDetalhe() {
               levantamentos dele vão sumir da lista.
             </p>
           ) : (
-            <p>O levantamento, com equipamentos, fotos e análises, vai sumir da lista deste cliente.</p>
+            <p>O levantamento, com equipamentos, fotos e análises, vai sumir da lista deste prospect.</p>
           )}
         </ConfirmarExclusao>
       )}

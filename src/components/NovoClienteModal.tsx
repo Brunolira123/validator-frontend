@@ -49,7 +49,7 @@ export function NovoClienteModal({ onClose, onSuccess }: Props) {
   const criarMutation = useMutation({
     mutationFn: clientesApi.criar,
     onSuccess: () => onSuccess(),
-    onError: (e) => setErroGeral(mensagemErro(e, 'Erro ao criar cliente')),
+    onError: (e) => setErroGeral(mensagemErro(e, 'Erro ao criar prospect')),
   });
 
   const handleBuscarCnpj = async () => {
@@ -87,7 +87,7 @@ export function NovoClienteModal({ onClose, onSuccess }: Props) {
   };
 
   return (
-    <Modal title="Novo Cliente" onClose={onClose} size="2xl">
+    <Modal title="Novo Prospect" onClose={onClose} size="2xl">
         <form onSubmit={handleSubmit(onSubmit)} className="p-4 sm:p-6 space-y-4">
           <div className="flex gap-2 items-end">
             <div className="flex-1">
@@ -171,7 +171,7 @@ export function NovoClienteModal({ onClose, onSuccess }: Props) {
               Cancelar
             </Button>
             <Button type="submit" loading={isSubmitting || criarMutation.isPending}>
-              Criar Cliente
+              Criar Prospect
             </Button>
           </div>
         </form>

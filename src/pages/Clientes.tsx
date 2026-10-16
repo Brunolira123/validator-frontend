@@ -38,27 +38,27 @@ export default function Clientes() {
     <div>
       <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-neutral-900">Clientes</h1>
+          <h1 className="text-2xl font-bold text-neutral-900">Prospects</h1>
           <p className="text-sm text-neutral-500 mt-1">
-            {clientes?.length ?? 0} cliente(s) cadastrado(s)
+            {clientes?.length ?? 0} prospect(s) cadastrado(s)
           </p>
         </div>
         <Button onClick={() => setModalOpen(true)}>
           <Plus size={16} />
-          Novo Cliente
+          Novo Prospect
         </Button>
       </div>
 
       {isLoading && <p className="text-neutral-500">Carregando...</p>}
 
-      {error && <ErrorAlert>{mensagemErro(error, 'Erro ao carregar clientes')}</ErrorAlert>}
+      {error && <ErrorAlert>{mensagemErro(error, 'Erro ao carregar prospects')}</ErrorAlert>}
 
       {clientes && clientes.length === 0 && (
         <Card>
           <div className="text-center py-8">
             <Building2 size={32} className="mx-auto text-neutral-300" />
             <p className="text-neutral-500 mt-3">
-              Nenhum cliente cadastrado ainda. Clique em "Novo Cliente" para começar.
+              Nenhum prospect cadastrado ainda. Clique em "Novo Prospect" para começar.
             </p>
           </div>
         </Card>
@@ -69,7 +69,7 @@ export default function Clientes() {
           <Card
             key={c.id}
             interativo
-            onClick={() => navigate(`/clientes/${c.id}`)}
+            onClick={() => navigate(`/comercial/clientes/${c.id}`)}
           >
             <div className="flex items-start gap-3">
               <span
@@ -113,9 +113,9 @@ export default function Clientes() {
 
       {paraExcluir && (
         <ConfirmarExclusao
-          titulo="Excluir cliente?"
+          titulo="Excluir prospect?"
           excluindo={excluirMutation.isPending}
-          erro={excluirMutation.error ? mensagemErro(excluirMutation.error, 'Erro ao excluir cliente') : null}
+          erro={excluirMutation.error ? mensagemErro(excluirMutation.error, 'Erro ao excluir prospect') : null}
           onConfirmar={() => excluirMutation.mutate(paraExcluir.id)}
           onCancelar={() => {
             setParaExcluir(null);
