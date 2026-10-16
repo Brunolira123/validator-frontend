@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { Marca } from './Marca';
-import { House, LogOut, Menu, X } from 'lucide-react';
-import { useAuthStore } from '../stores/authStore';
+import { House, LogOut, Menu, UsersRound, X } from 'lucide-react';
+import { useAuthStore, useIsAdmin } from '../stores/authStore';
 import { modulosDoPerfil } from '../modulos';
 
 function iniciais(nome?: string) {
@@ -13,6 +13,7 @@ function iniciais(nome?: string) {
 
 export function Layout() {
   const usuario = useAuthStore((s) => s.usuario);
+  const isAdmin = useIsAdmin();
   const logout = useAuthStore((s) => s.logout);
   const navigate = useNavigate();
   const [menuAberto, setMenuAberto] = useState(false);
@@ -22,6 +23,7 @@ export function Layout() {
   const navItems = [
     { to: '/', label: 'Início', icon: House, end: true },
     ...modulosDoPerfil(usuario?.perfil).map((m) => ({ to: m.rota, label: m.label, icon: m.icone, end: false })),
+    ...(isAdmin ? [{ to: '/usuarios', label: 'Usuários', icon: UsersRound, end: false }] : []),
   ];
 
   useEffect(() => {

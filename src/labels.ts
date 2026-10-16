@@ -1,4 +1,4 @@
-import type { FuncaoEquipamento } from './types/api';
+import type { FuncaoEquipamento, Perfil } from './types/api';
 
 export const funcaoLabel: Record<FuncaoEquipamento, string> = {
   BANCO_DADOS: 'Banco de Dados',
@@ -8,6 +8,15 @@ export const funcaoLabel: Record<FuncaoEquipamento, string> = {
   RETAGUARDA: 'Retaguarda',
   CONSULTA_PRECO: 'Consulta de Preço',
   OUTRO: 'Outro',
+};
+
+export const perfilLabel: Record<Perfil, string> = {
+  ADMIN: 'Administrador',
+  DIRETORIA: 'Diretoria',
+  COMERCIAL: 'Comercial',
+  TECNICO: 'Técnico',
+  SUPORTE: 'Suporte',
+  PROJETOS: 'Projetos',
 };
 
 const dataHora = new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeStyle: 'short' });

@@ -242,6 +242,17 @@ export interface ClienteMonitoradoResponse {
   ultimaExecucaoEm: string | null;
   totalLojas: number;
   lojasComFalha: number;
+  /** Da última execução. null = agente antigo ou não deu para ler no banco do cliente. */
+  versaoBanco: string | null;
+  encerramentoAutomatico: boolean | null;
+  consistenciaAutomatica: boolean | null;
+}
+
+/** NFC-e de ontem não transmitida: o que costuma segurar a consistência da loja. */
+export interface NfceNaoTransmitida {
+  contingencia: boolean;
+  /** Preenchido = rejeitada pela SEFAZ. */
+  motivoRejeicao: string | null;
 }
 
 export interface VerificacaoMonitor {
@@ -257,6 +268,7 @@ export interface LojaMonitorada {
   descricao: string | null;
   ok: boolean;
   verificacoes: VerificacaoMonitor[];
+  nfceNaoTransmitidas: NfceNaoTransmitida[];
 }
 
 export interface ClienteMonitoradoDetalhe {
@@ -290,4 +302,32 @@ export interface PedidoConsulta {
   criadoEm: string;
   concluidoEm: string | null;
   execucaoId: number | null;
+}
+
+// ===== Usuários (administração) =====
+export interface UsuarioAdmin {
+  id: number;
+  login: string;
+  nome: string;
+  email: string;
+  perfil: Perfil;
+  ativo: boolean;
+  criadoEm: string;
+}
+
+export interface UsuarioCriacaoRequest {
+  login: string;
+  nome: string;
+  email: string;
+  perfil: Perfil;
+  senha: string;
+}
+
+export interface UsuarioAtualizacaoRequest {
+  nome: string;
+  email: string;
+  perfil: Perfil;
+  ativo: boolean;
+  /** Vazio mantém a senha atual. */
+  senha?: string;
 }

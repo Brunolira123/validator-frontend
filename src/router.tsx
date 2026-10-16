@@ -6,6 +6,7 @@ import Levantamentos from './pages/Levantamentos';
 import Relatorios from './pages/Relatorios';
 import Monitoramento from './pages/Monitoramento';
 import MonitoramentoCliente from './pages/MonitoramentoCliente';
+import Usuarios from './pages/Usuarios';
 import NotFound from './pages/NotFound';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { Layout } from './components/Layout';
@@ -50,6 +51,13 @@ export const router = createBrowserRouter([
           { index: true, element: <Monitoramento /> },
           { path: 'clientes/:id', element: <MonitoramentoCliente /> },
         ],
+      },
+
+      {
+        // Administração: fora dos módulos, só ADMIN e DIRETORIA (o backend também barra)
+        path: 'usuarios',
+        element: <ProtectedRoute perfis={['ADMIN', 'DIRETORIA']} />,
+        children: [{ index: true, element: <Usuarios /> }],
       },
 
       // Rotas antigas (antes do portal)

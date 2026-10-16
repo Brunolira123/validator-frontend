@@ -9,6 +9,8 @@ import { Card } from '../components/Card';
 import { ErrorAlert } from '../components/ErrorAlert';
 import { Modal } from '../components/Modal';
 import { SituacaoMonitorBadge } from '../components/SituacaoMonitorBadge';
+import { InfoBancoCliente } from '../components/InfoBancoCliente';
+import { NfceNaoTransmitidas } from '../components/NfceNaoTransmitidas';
 import { TokenAgenteModal } from '../components/TokenAgenteModal';
 import { useIsAdmin } from '../stores/authStore';
 import { formatarCnpj, formatarDataHora, formatarDiaMes, tempoDesde, verificacaoLabel } from '../labels';
@@ -128,6 +130,9 @@ export default function MonitoramentoCliente() {
                 <dd className="inline text-neutral-900">{cliente.versaoAgente ?? '—'}</dd>
               </div>
             </dl>
+            <div className="mt-3">
+              <InfoBancoCliente cliente={cliente} />
+            </div>
           </div>
 
           <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
@@ -206,6 +211,12 @@ export default function MonitoramentoCliente() {
                 </li>
               ))}
             </ul>
+            {loja.nfceNaoTransmitidas.length > 0 && (
+              <NfceNaoTransmitidas
+                nfce={loja.nfceNaoTransmitidas}
+                dia={loja.verificacoes.find((v) => v.tipo === 'CONSISTENCIA')?.referencia ?? null}
+              />
+            )}
           </Card>
         ))}
       </div>

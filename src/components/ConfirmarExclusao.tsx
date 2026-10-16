@@ -10,12 +10,14 @@ interface Props {
   onCancelar: () => void;
   excluindo: boolean;
   erro?: string | null;
+  /** Troca o aviso padrão de arquivamento (ex.: exclusão definitiva). */
+  aviso?: string;
 }
 
 /**
  * Confirmação de exclusão (soft delete). Bottom sheet no mobile, card centralizado a partir de `sm`.
  */
-export function ConfirmarExclusao({ titulo, children, onConfirmar, onCancelar, excluindo, erro }: Props) {
+export function ConfirmarExclusao({ titulo, children, onConfirmar, onCancelar, excluindo, erro, aviso }: Props) {
   const onCancelarRef = useRef(onCancelar);
   useEffect(() => {
     onCancelarRef.current = onCancelar;
@@ -51,10 +53,14 @@ export function ConfirmarExclusao({ titulo, children, onConfirmar, onCancelar, e
           <div className="min-w-0">
             <h2 className="text-base font-bold text-neutral-900">{titulo}</h2>
             <div className="mt-1 text-sm text-neutral-600 space-y-2">{children}</div>
-            <p className="mt-3 inline-flex items-center gap-1.5 text-xs text-neutral-500">
-              <Archive size={14} />
-              Fica arquivado no sistema e pode ser recuperado pelo suporte.
-            </p>
+            {aviso ? (
+              <p className="mt-3 text-xs text-neutral-500">{aviso}</p>
+            ) : (
+              <p className="mt-3 inline-flex items-center gap-1.5 text-xs text-neutral-500">
+                <Archive size={14} />
+                Fica arquivado no sistema e pode ser recuperado pelo suporte.
+              </p>
+            )}
           </div>
         </div>
 

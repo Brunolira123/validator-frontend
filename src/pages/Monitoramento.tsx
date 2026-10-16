@@ -8,6 +8,7 @@ import { Button } from '../components/Button';
 import { Card } from '../components/Card';
 import { ErrorAlert } from '../components/ErrorAlert';
 import { SituacaoMonitorBadge } from '../components/SituacaoMonitorBadge';
+import { InfoBancoCliente } from '../components/InfoBancoCliente';
 import { NovoClienteMonitoradoModal } from '../components/NovoClienteMonitoradoModal';
 import { TokenAgenteModal } from '../components/TokenAgenteModal';
 import { useIsAdmin } from '../stores/authStore';
@@ -89,6 +90,9 @@ export default function Monitoramento() {
             <div className="mt-4 flex items-center gap-2 text-sm text-neutral-600">
               <Store size={16} className="text-neutral-400 shrink-0" />
               <span className={c.lojasComFalha > 0 ? 'text-red-600 font-medium' : ''}>{resumoLojas(c)}</span>
+            </div>
+            <div className="mt-2">
+              <InfoBancoCliente cliente={c} />
             </div>
             <p className="mt-1 text-xs text-neutral-400">
               {c.ultimoContato ? `Último contato ${tempoDesde(c.ultimoContato)}` : 'Agente nunca se conectou'}
