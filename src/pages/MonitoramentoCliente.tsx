@@ -25,6 +25,20 @@ const textoPedido: Record<PedidoConsulta['status'], string> = {
   EXPIRADO: 'O agente não respondeu a tempo. Ele pode estar offline.',
 };
 
+type FiltroLojas = 'FALHA' | 'OK' | 'TODAS';
+
+const opcoesFiltro: { valor: FiltroLojas; label: string }[] = [
+  { valor: 'FALHA', label: 'Com falha' },
+  { valor: 'OK', label: 'Sem falha' },
+  { valor: 'TODAS', label: 'Todas' },
+];
+
+const vazioFiltro: Record<FiltroLojas, string> = {
+  FALHA: 'Nenhuma loja com falha. 🎉',
+  OK: 'Nenhuma loja sem falha.',
+  TODAS: 'Nenhuma loja ativa no último resultado.',
+};
+
 export default function MonitoramentoCliente() {
   const { id } = useParams<{ id: string }>();
   const clienteId = Number(id);
@@ -33,6 +47,8 @@ export default function MonitoramentoCliente() {
   const [pedidoId, setPedidoId] = useState<number | null>(null);
   const [confirmarToken, setConfirmarToken] = useState(false);
   const [tokenGerado, setTokenGerado] = useState<TokenAgenteResponse | null>(null);
+  // Por padrão só as com falha: é o que o suporte precisa resolver
+  const [filtro, setFiltro] = useState<FiltroLojas>('FALHA');
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['monitor', 'cliente', clienteId],
@@ -93,6 +109,13 @@ export default function MonitoramentoCliente() {
 
   const { cliente, lojas, erro } = data;
   const consultando = consultarMutation.isPending || pedidoAberto(pedido);
+  const qtdComFalha = lojas.filter((l) => !l.ok).length;
+  const contagem: Record<FiltroLojas, number> = {
+    FALHA: qtdComFalha,
+    OK: lojas.length - qtdComFalha,
+    TODAS: lojas.length,
+  };
+  const lojasFiltradas = filtro === 'TODAS' ? lojas : lojas.filter((l) => (filtro === 'FALHA' ? !l.ok : l.ok));
 
   return (
     <div>
@@ -175,7 +198,26 @@ export default function MonitoramentoCliente() {
         </div>
       )}
 
-      <h2 className="text-lg font-semibold text-neutral-900 mb-3">Lojas</h2>
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
+        <h2 className="text-lg font-semibold text-neutral-900">Lojas</h2>
+        {lojas.length > 0 && (
+          <div role="group" aria-label="Filtrar lojas" className="inline-flex rounded-lg border border-neutral-300 bg-white p-0.5">
+            {opcoesFiltro.map((o) => (
+              <button
+                key={o.valor}
+                type="button"
+                aria-pressed={filtro === o.valor}
+                onClick={() => setFiltro(o.valor)}
+                className={`min-h-11 md:min-h-0 px-3 py-1.5 text-sm font-medium rounded-md transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-vr-500 ${
+                  filtro === o.valor ? 'bg-vr-600 text-white' : 'text-neutral-600 hover:bg-neutral-100'
+                }`}
+              >
+                {o.label} ({contagem[o.valor]})
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
       {lojas.length === 0 && !erro && (
         <Card>
           <p className="text-center text-neutral-500 py-6">
@@ -185,8 +227,13 @@ export default function MonitoramentoCliente() {
           </p>
         </Card>
       )}
+      {lojas.length > 0 && lojasFiltradas.length === 0 && (
+        <Card>
+          <p className="text-center text-neutral-500 py-6">{vazioFiltro[filtro]}</p>
+        </Card>
+      )}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
-        {lojas.map((loja) => (
+        {lojasFiltradas.map((loja) => (
           <Card key={loja.lojaId} className={loja.ok ? '' : 'border-red-200'}>
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">

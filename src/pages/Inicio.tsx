@@ -3,11 +3,13 @@ import { ChevronRight } from 'lucide-react';
 import { Card } from '../components/Card';
 import { useAuthStore } from '../stores/authStore';
 import { modulosDoPerfil } from '../modulos';
+import { DashboardMonitoramento } from '../components/DashboardMonitoramento';
 
 export default function Inicio() {
   const usuario = useAuthStore((s) => s.usuario);
   const navigate = useNavigate();
   const disponiveis = modulosDoPerfil(usuario?.perfil);
+  const veMonitoramento = disponiveis.some((m) => m.id === 'monitoramento');
   const primeiroNome = usuario?.nome.trim().split(/\s+/)[0];
 
   return (
@@ -43,6 +45,13 @@ export default function Inicio() {
           </Card>
         ))}
       </div>
+
+      {veMonitoramento && (
+        <div className="mt-8">
+          <h2 className="text-lg font-semibold text-neutral-900 mb-3">Painel</h2>
+          <DashboardMonitoramento />
+        </div>
+      )}
     </div>
   );
 }
