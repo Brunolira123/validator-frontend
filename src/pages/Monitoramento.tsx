@@ -11,6 +11,7 @@ import { SituacaoMonitorBadge } from '../components/SituacaoMonitorBadge';
 import { InfoBancoCliente } from '../components/InfoBancoCliente';
 import { NovoClienteMonitoradoModal } from '../components/NovoClienteMonitoradoModal';
 import { TokenAgenteModal } from '../components/TokenAgenteModal';
+import { FiltroFalhaSelector, type FiltroFalha } from '../components/FiltroFalha';
 import { useIsAdmin } from '../stores/authStore';
 import { formatarCnpj, tempoDesde } from '../labels';
 import type { ClienteMonitoradoResponse, SituacaoMonitor, TokenAgenteResponse } from '../types/api';
@@ -24,12 +25,22 @@ function resumoLojas(c: ClienteMonitoradoResponse) {
   return `${c.totalLojas} loja(s) ok`;
 }
 
+const temProblema = (c: ClienteMonitoradoResponse) => c.situacao === 'FALHA' || c.situacao === 'OFFLINE';
+
+const vazioFiltro: Record<FiltroFalha, string> = {
+  FALHA: 'Nenhum cliente com falha.',
+  OK: 'Nenhum cliente sem falha.',
+  TODAS: '',
+};
+
 export default function Monitoramento() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const isAdmin = useIsAdmin();
   const [novoAberto, setNovoAberto] = useState(false);
   const [tokenGerado, setTokenGerado] = useState<TokenAgenteResponse | null>(null);
+  // Por padrão só quem precisa de atenção (falha ou offline)
+  const [filtro, setFiltro] = useState<FiltroFalha>('FALHA');
 
   const { data: clientes, isLoading, error } = useQuery({
     queryKey: ['monitor', 'clientes'],
@@ -41,7 +52,14 @@ export default function Monitoramento() {
   const ordenados = clientes
     ? [...clientes].sort((a, b) => prioridade[a.situacao] - prioridade[b.situacao] || a.nome.localeCompare(b.nome))
     : undefined;
-  const comProblema = clientes?.filter((c) => c.situacao === 'FALHA' || c.situacao === 'OFFLINE').length ?? 0;
+  const comProblema = clientes?.filter(temProblema).length ?? 0;
+  const contagem: Record<FiltroFalha, number> = {
+    FALHA: comProblema,
+    OK: (clientes?.length ?? 0) - comProblema,
+    TODAS: clientes?.length ?? 0,
+  };
+  const filtrados =
+    filtro === 'TODAS' ? ordenados : ordenados?.filter((c) => (filtro === 'FALHA' ? temProblema(c) : !temProblema(c)));
 
   return (
     <div>
@@ -61,6 +79,12 @@ export default function Monitoramento() {
         )}
       </div>
 
+      {clientes && clientes.length > 0 && (
+        <div className="mb-4">
+          <FiltroFalhaSelector valor={filtro} onChange={setFiltro} contagem={contagem} rotulo="clientes" labelTodas="Todos" />
+        </div>
+      )}
+
       {isLoading && <p className="text-neutral-500">Carregando...</p>}
 
       {error && <ErrorAlert>{mensagemErro(error, 'Erro ao carregar clientes monitorados')}</ErrorAlert>}
@@ -77,8 +101,14 @@ export default function Monitoramento() {
         </Card>
       )}
 
+      {clientes && clientes.length > 0 && filtrados?.length === 0 && (
+        <Card>
+          <p className="text-center text-neutral-500 py-6">{vazioFiltro[filtro]}</p>
+        </Card>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-        {ordenados?.map((c) => (
+        {filtrados?.map((c) => (
           <Card key={c.id} interativo onClick={() => navigate(`/monitoramento/clientes/${c.id}`)}>
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
