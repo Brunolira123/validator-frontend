@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { ChevronRight, CircleCheck } from 'lucide-react';
+import { ChevronRight, CircleCheck, TriangleAlert, Unplug, type LucideIcon } from 'lucide-react';
 import { monitorApi } from '../api/monitor';
 import { mensagemErro } from '../api/erro';
 import { Card } from './Card';
@@ -29,13 +29,27 @@ function detalheProblema(c: ClienteMonitoradoResponse) {
   return `${c.lojasComFalha} de ${c.totalLojas} loja(s)`;
 }
 
-function Indicador({ label, valor, destaque }: { label: string; valor: number; destaque?: boolean }) {
+interface CardSituacaoProps {
+  label: string;
+  valor: number;
+  icone: LucideIcon;
+  /** Cor do ícone e do fundo dele; com valor zero o card fica neutro. */
+  cor: { icone: string; fundo: string };
+  detalhe?: string;
+}
+
+function CardSituacao({ label, valor, icone: Icone, cor, detalhe }: CardSituacaoProps) {
+  const ativo = valor > 0;
   return (
-    <div>
-      <p className="text-xs text-neutral-500">{label}</p>
-      <p className={`text-2xl font-semibold mt-0.5 ${destaque && valor > 0 ? 'text-red-600' : 'text-neutral-900'}`}>
-        {valor.toLocaleString('pt-BR')}
-      </p>
+    <div className="flex items-start gap-3 rounded-lg border border-neutral-200 p-3">
+      <div className={`p-2 rounded-lg shrink-0 ${ativo ? cor.fundo : 'bg-neutral-100'}`}>
+        <Icone size={18} aria-hidden="true" className={ativo ? cor.icone : 'text-neutral-400'} />
+      </div>
+      <div className="min-w-0">
+        <p className="text-xs font-medium text-neutral-600">{label}</p>
+        <p className="text-2xl font-semibold text-neutral-900 mt-0.5">{valor.toLocaleString('pt-BR')}</p>
+        {detalhe && <p className="text-xs text-neutral-500 mt-0.5">{detalhe}</p>}
+      </div>
     </div>
   );
 }
@@ -53,6 +67,7 @@ export function DashboardMonitoramento() {
   if (error) return <ErrorAlert>{mensagemErro(error, 'Erro ao carregar o monitoramento')}</ErrorAlert>;
   if (!clientes || clientes.length === 0) return null;
 
+  const qtd = (situacao: SituacaoMonitor) => clientes.filter((c) => c.situacao === situacao).length;
   const contagem = situacoes
     .map((s) => ({ ...s, qtd: clientes.filter((c) => c.situacao === s.situacao).length }))
     .filter((s) => s.qtd > 0);
@@ -83,10 +98,28 @@ export function DashboardMonitoramento() {
         </button>
       </div>
 
-      <div className="mt-3 grid grid-cols-3 gap-4">
-        <Indicador label="Clientes" valor={clientes.length} />
-        <Indicador label="Com problema" valor={comProblema.length} destaque />
-        <Indicador label="Lojas com falha" valor={lojasComFalha} destaque />
+      <p className="text-sm text-neutral-500">{clientes.length.toLocaleString('pt-BR')} cliente(s) monitorado(s)</p>
+
+      <div className="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <CardSituacao
+          label="Clientes OK"
+          valor={qtd('OK')}
+          icone={CircleCheck}
+          cor={{ icone: 'text-green-600', fundo: 'bg-green-50' }}
+        />
+        <CardSituacao
+          label="Consistência sem finalizar"
+          valor={qtd('FALHA')}
+          icone={TriangleAlert}
+          cor={{ icone: 'text-red-600', fundo: 'bg-red-50' }}
+          detalhe={lojasComFalha > 0 ? `${lojasComFalha.toLocaleString('pt-BR')} loja(s) com falha` : undefined}
+        />
+        <CardSituacao
+          label="Agentes offline"
+          valor={qtd('OFFLINE')}
+          icone={Unplug}
+          cor={{ icone: 'text-neutral-800', fundo: 'bg-neutral-200' }}
+        />
       </div>
 
       {/* Distribuição por situação: barra empilhada + legenda com os números (a legenda é a versão em texto) */}
