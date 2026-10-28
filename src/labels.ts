@@ -1,4 +1,10 @@
-import type { FuncaoEquipamento, Perfil } from './types/api';
+import type {
+  CategoriaProspeccao,
+  FuncaoEquipamento,
+  Perfil,
+  StatusProspect,
+  TemperaturaNegociacao,
+} from './types/api';
 
 export const funcaoLabel: Record<FuncaoEquipamento, string> = {
   BANCO_DADOS: 'Banco de Dados',
@@ -18,6 +24,41 @@ export const perfilLabel: Record<Perfil, string> = {
   SUPORTE: 'Suporte',
   PROJETOS: 'Projetos',
 };
+
+/** Na ordem em que aparecem nos filtros da busca de prospects. */
+export const categoriaProspeccaoLabel: Record<CategoriaProspeccao, string> = {
+  SUPERMERCADO: 'Supermercado',
+  HIPERMERCADO: 'Hipermercado',
+  MERCADO: 'Mercado e mercearia',
+  ATACADO: 'Atacado e atacarejo',
+  HORTIFRUTI: 'Hortifrúti',
+  ACOUGUE: 'Açougue',
+  PEIXARIA: 'Peixaria',
+  PADARIA: 'Padaria',
+  CONVENIENCIA: 'Conveniência',
+  EMPORIO: 'Empório',
+  BEBIDAS: 'Bebidas e adega',
+};
+
+export const categoriasProspeccao = Object.keys(categoriaProspeccaoLabel) as CategoriaProspeccao[];
+
+export const statusProspectLabel: Record<StatusProspect, string> = {
+  NOVO: 'Novo',
+  VISITADO: 'Visitado',
+  LTO: 'LTO',
+  DESCARTADO: 'Descartado',
+};
+
+export const temperaturaLabel: Record<TemperaturaNegociacao, string> = {
+  FRIA: 'Fria',
+  MORNA: 'Morna',
+  QUENTE: 'Quente',
+};
+
+export const ufs = [
+  'AC', 'AL', 'AM', 'AP', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MG', 'MS', 'MT', 'PA',
+  'PB', 'PE', 'PI', 'PR', 'RJ', 'RN', 'RO', 'RR', 'RS', 'SC', 'SE', 'SP', 'TO',
+] as const;
 
 const dataHora = new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
 const dataCurta = new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit', timeZone: 'UTC' });

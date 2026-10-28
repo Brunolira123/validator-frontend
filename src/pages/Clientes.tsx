@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useNavigate } from 'react-router-dom';
-import { Building2, MapPin, Plus } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Building2, MapPin, Plus, Search } from 'lucide-react';
 import { clientesApi } from '../api/clientes';
 import { Card } from '../components/Card';
 import { ErrorAlert } from '../components/ErrorAlert';
@@ -43,10 +43,19 @@ export default function Clientes() {
             {clientes?.length ?? 0} prospect(s) cadastrado(s)
           </p>
         </div>
-        <Button onClick={() => setModalOpen(true)}>
-          <Plus size={16} />
-          Novo Prospect
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button variant="secondary" onClick={() => setModalOpen(true)}>
+            <Plus size={16} />
+            Novo Prospect
+          </Button>
+          <Link
+            to="/comercial/prospeccao"
+            className="inline-flex items-center justify-center gap-2 min-h-11 md:min-h-0 px-4 py-2 text-sm font-semibold rounded-lg bg-vr-600 hover:bg-vr-700 active:bg-vr-800 text-white shadow-sm transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-vr-500 focus-visible:ring-offset-2"
+          >
+            <Search size={16} />
+            Buscar prospects
+          </Link>
+        </div>
       </div>
 
       {isLoading && <p className="text-neutral-500">Carregando...</p>}

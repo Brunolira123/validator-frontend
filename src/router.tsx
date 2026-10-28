@@ -2,6 +2,7 @@ import { createBrowserRouter, Navigate } from 'react-router-dom';
 import Login from './pages/Login';
 import Inicio from './pages/Inicio';
 import Clientes from './pages/Clientes';
+import Prospeccao from './pages/Prospeccao';
 import Levantamentos from './pages/Levantamentos';
 import Relatorios from './pages/Relatorios';
 import Monitoramento from './pages/Monitoramento';
@@ -39,6 +40,7 @@ export const router = createBrowserRouter([
           { index: true, element: <Navigate to="clientes" replace /> },
           { path: 'clientes', element: <Clientes /> },
           { path: 'clientes/:id', element: <ClienteDetalhe /> },
+          { path: 'prospeccao', element: <Prospeccao /> },
           { path: 'levantamentos', element: <Levantamentos /> },
           { path: 'levantamentos/:id', element: <LevantamentoDetalhe /> },
           { path: 'relatorios', element: <Relatorios /> },

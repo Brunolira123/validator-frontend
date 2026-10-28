@@ -60,6 +60,124 @@ export interface CnpjResponseDTO {
   uf?: string;
   telefone?: string;
   email?: string;
+  /** Selo do público-alvo (Lucro Real). Só informativo: não bloqueia nada. */
+  perfil?: PerfilTributario;
+}
+
+export interface PerfilTributario {
+  simples: boolean | null;
+  mei: boolean | null;
+  porte: string | null;
+  regimeTributario: string | null;
+  regimeAno: number | null;
+  foraDoPerfil: boolean;
+  motivo: string | null;
+}
+
+// ===== Prospecção (Google Places) =====
+export type CategoriaProspeccao =
+  | 'SUPERMERCADO'
+  | 'HIPERMERCADO'
+  | 'MERCADO'
+  | 'ATACADO'
+  | 'HORTIFRUTI'
+  | 'ACOUGUE'
+  | 'PEIXARIA'
+  | 'PADARIA'
+  | 'CONVENIENCIA'
+  | 'EMPORIO'
+  | 'BEBIDAS';
+
+export type StatusProspect = 'NOVO' | 'VISITADO' | 'LTO' | 'DESCARTADO';
+export type ResultadoVisita = 'ATENDEU' | 'NAO_ATENDEU';
+export type TemperaturaNegociacao = 'FRIA' | 'MORNA' | 'QUENTE';
+export type OrigemProspect = 'GOOGLE' | 'MANUAL' | 'CRM';
+
+/** Lugar do Google, só para exibir (nada disso fica no banco, só o placeId). */
+export interface LugarEncontrado {
+  placeId: string;
+  nome: string | null;
+  endereco: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  categorias: CategoriaProspeccao[];
+  /** Relativa à base da API e exige o Bearer: baixar como blob (FotoLugar). */
+  fotoUrl: string | null;
+  fotoAutor: string | null;
+  fotoAutorUrl: string | null;
+  googleMapsUrl: string | null;
+  rotaUrl: string;
+  statusFuncionamento: string | null;
+  /** Preenchidos quando o lugar já é prospect de quem buscou (ou para ADMIN/DIRETORIA). */
+  prospectId: number | null;
+  statusProspect: StatusProspect | null;
+  temperatura: TemperaturaNegociacao | null;
+  /** Prospect de outro comercial: sem id nem status, e sem ações de funil. */
+  deOutroComercial: boolean;
+}
+
+export interface PaginaBuscaProspect {
+  lugares: LugarEncontrado[];
+  /** Token opaco do "carregar mais"; null = acabou. */
+  proximaPagina: string | null;
+}
+
+export interface SalvarProspectRequest {
+  placeId: string;
+  cidade: string;
+  uf: string;
+  categoria?: CategoriaProspeccao;
+}
+
+export interface ProspectResponse {
+  id: number;
+  origem: OrigemProspect;
+  placeId: string | null;
+  nome: string | null;
+  cidade: string;
+  uf: string;
+  categoria: CategoriaProspeccao | null;
+  status: StatusProspect;
+  resultadoVisita: ResultadoVisita | null;
+  temperatura: TemperaturaNegociacao | null;
+  visitadoEm: string | null;
+  observacao: string | null;
+  responsavelId: number;
+  responsavelNome: string;
+  clienteId: number | null;
+  criadoEm: string;
+  /** null quando o Google não respondeu, o lugar sumiu ou o limite diário acabou. Respostas de POST vêm sempre null. */
+  lugar: LugarEncontrado | null;
+}
+
+export interface PaginaProspects {
+  prospects: ProspectResponse[];
+  pagina: number;
+  totalPaginas: number;
+  total: number;
+}
+
+export interface VisitaProspectRequest {
+  resultado: ResultadoVisita;
+  temperatura?: TemperaturaNegociacao;
+  observacao?: string;
+  latitude?: number;
+  longitude?: number;
+}
+
+export interface LtoProspectRequest {
+  cnpj: string;
+  qtdServidores?: number;
+  qtdPdvs?: number;
+  qtdRetaguardas?: number;
+  consultaPreco?: boolean;
+  qtdConsultaPreco?: number;
+  outros?: string;
+}
+
+export interface LtoProspectResponse {
+  clienteId: number;
+  levantamentoId: number;
 }
 
 // ===== Levantamento =====
