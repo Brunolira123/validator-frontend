@@ -9,13 +9,15 @@ interface Props {
   lugar: LugarEncontrado;
   /** Ações do funil (Visitado, LTO...), ao lado do botão Rota. */
   acoes?: ReactNode;
+  /** Linha extra abaixo do status (ex.: data da visita em Meus prospects). */
+  detalhe?: ReactNode;
 }
 
 /**
  * Resultado da busca no estilo do Google: foto, nome, endereço e o caminho até a loja.
  * Sem nota, avaliações, telefone ou site: esses campos ficam fora da busca (custo).
  */
-export function LugarCard({ lugar, acoes }: Props) {
+export function LugarCard({ lugar, acoes, detalhe }: Props) {
   const nome = lugar.nome ?? 'Sem nome no Google';
   const fechadoTemporariamente = lugar.statusFuncionamento === 'CLOSED_TEMPORARILY';
 
@@ -36,6 +38,7 @@ export function LugarCard({ lugar, acoes }: Props) {
             )}
           </div>
         )}
+        {detalhe}
 
         {lugar.endereco && (
           <p className="flex items-start gap-1.5 text-sm text-neutral-600">

@@ -12,12 +12,14 @@ interface Props {
   erro?: string | null;
   /** Troca o aviso padrão de arquivamento (ex.: exclusão definitiva). */
   aviso?: string;
+  /** Texto do botão de confirmação (padrão: Excluir). */
+  rotuloConfirmar?: string;
 }
 
 /**
  * Confirmação de exclusão (soft delete). Bottom sheet no mobile, card centralizado a partir de `sm`.
  */
-export function ConfirmarExclusao({ titulo, children, onConfirmar, onCancelar, excluindo, erro, aviso }: Props) {
+export function ConfirmarExclusao({ titulo, children, onConfirmar, onCancelar, excluindo, erro, aviso, rotuloConfirmar = 'Excluir' }: Props) {
   const onCancelarRef = useRef(onCancelar);
   useEffect(() => {
     onCancelarRef.current = onCancelar;
@@ -75,7 +77,7 @@ export function ConfirmarExclusao({ titulo, children, onConfirmar, onCancelar, e
             Cancelar
           </Button>
           <Button type="button" variant="danger" onClick={onConfirmar} loading={excluindo}>
-            Excluir
+            {rotuloConfirmar}
           </Button>
         </div>
       </div>
