@@ -10,7 +10,7 @@ import { AcoesProspect } from './AcoesProspect';
 import { Button } from './Button';
 import { Card } from './Card';
 import { ErrorAlert } from './ErrorAlert';
-import { LugarCard } from './LugarCard';
+import { GradeLugares, LugarCard, LugarCardSkeleton } from './LugarCard';
 import { StatusProspectBadge } from './StatusProspectBadge';
 
 const TAMANHO_PAGINA = 20;
@@ -94,15 +94,11 @@ export function MeusProspects() {
       </div>
 
       {lista.isPending && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4" aria-busy="true" aria-label="Carregando prospects">
-          {[0, 1, 2, 3].map((i) => (
-            <div key={i} className="h-40 rounded-xl border border-neutral-200 bg-white p-4 space-y-3">
-              <div className="h-4 w-2/3 rounded bg-neutral-100 animate-pulse" />
-              <div className="h-3 w-full rounded bg-neutral-100 animate-pulse" />
-              <div className="h-3 w-1/3 rounded bg-neutral-100 animate-pulse" />
-            </div>
+        <GradeLugares aria-busy="true" aria-label="Carregando prospects">
+          {Array.from({ length: 8 }, (_, i) => (
+            <LugarCardSkeleton key={i} />
           ))}
-        </div>
+        </GradeLugares>
       )}
 
       {lista.isError && <ErrorAlert>{mensagemErro(lista.error, 'Erro ao carregar os prospects')}</ErrorAlert>}
@@ -123,15 +119,11 @@ export function MeusProspects() {
 
       {dados && dados.prospects.length > 0 && (
         <>
-          <div
-            className={`grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4 transition-opacity ${
-              lista.isPlaceholderData ? 'opacity-60' : ''
-            }`}
-          >
+          <GradeLugares className={`transition-opacity ${lista.isPlaceholderData ? 'opacity-60' : ''}`}>
             {dados.prospects.map((p) => (
               <ProspectCard key={p.id} prospect={p} mostrarResponsavel={isAdmin} />
             ))}
-          </div>
+          </GradeLugares>
 
           {dados.totalPaginas > 1 && (
             <nav aria-label="Páginas" className="mt-4 flex items-center justify-between gap-3">
@@ -205,8 +197,8 @@ function ProspectCard({ prospect: p, mostrarResponsavel }: { prospect: ProspectR
   }
 
   return (
-    <article className="bg-white rounded-xl border border-neutral-200 shadow-card overflow-hidden flex flex-col sm:flex-row">
-      <div className="aspect-[5/2] sm:aspect-auto sm:w-36 sm:shrink-0 bg-neutral-100 flex items-center justify-center text-neutral-300">
+    <article className="h-full bg-white rounded-xl border border-neutral-200 shadow-card overflow-hidden flex flex-col">
+      <div className="aspect-[5/2] md:aspect-video bg-neutral-100 flex items-center justify-center text-neutral-300">
         <Store size={28} aria-hidden="true" />
       </div>
       <div className="flex-1 min-w-0 p-4 flex flex-col gap-2">

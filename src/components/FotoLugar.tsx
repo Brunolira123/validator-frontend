@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Store } from 'lucide-react';
 import { prospeccaoApi } from '../api/prospeccao';
 
@@ -6,6 +6,8 @@ interface Props {
   /** Relativa à base da API (vem do backend); null = lugar sem foto. */
   fotoUrl: string | null;
   className?: string;
+  /** Crédito do autor, sobre a foto: só aparece com a foto carregada. */
+  credito?: ReactNode;
 }
 
 /**
@@ -13,7 +15,7 @@ interface Props {
  * entra na tela: cada foto nova conta no limite diário do backend.
  * Sem foto, carregando ou com erro (inclusive limite estourado): placeholder de loja.
  */
-export function FotoLugar({ fotoUrl, className = '' }: Props) {
+export function FotoLugar({ fotoUrl, className = '', credito }: Props) {
   const ref = useRef<HTMLDivElement>(null);
   const [visivel, setVisivel] = useState(false);
   // A imagem carregada fica presa à URL de origem: se fotoUrl mudar (card reaproveitado), a foto antiga
@@ -59,7 +61,14 @@ export function FotoLugar({ fotoUrl, className = '' }: Props) {
   return (
     <div ref={ref} className={`relative overflow-hidden bg-neutral-100 ${className}`}>
       {src ? (
-        <img src={src} alt="" className="absolute inset-0 h-full w-full object-cover animate-fade-in" />
+        <>
+          <img src={src} alt="" className="absolute inset-0 h-full w-full object-cover animate-fade-in" />
+          {credito && (
+            <p className="absolute inset-x-0 bottom-0 px-3 pt-4 pb-1.5 text-[11px] text-white truncate bg-gradient-to-t from-neutral-950/70 to-transparent">
+              {credito}
+            </p>
+          )}
+        </>
       ) : (
         <div className="absolute inset-0 flex items-center justify-center text-neutral-300">
           <Store size={28} aria-hidden="true" />

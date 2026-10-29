@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef } from 'react';
+import { useEffect, useId, useRef, type RefObject } from 'react';
 import { X } from 'lucide-react';
 import { categoriaProspeccaoLabel, categoriasProspeccao, gruposCategoriaProspeccao } from '../labels';
 import type { CategoriaProspeccao } from '../types/api';
@@ -61,6 +61,56 @@ export function CategoriasCheckboxes({ selecionadas, onChange }: CamposProps) {
           </fieldset>
         ))}
       </div>
+    </div>
+  );
+}
+
+/**
+ * Popover das categorias no desktop, abaixo do botão "Categorias". Não é modal: fecha no Esc (devolvendo o foco
+ * ao botão) e clicando fora de `ancora` (o wrapper do botão + popover).
+ */
+export function CategoriasPopover({
+  selecionadas,
+  onChange,
+  onClose,
+  ancora,
+}: CamposProps & { onClose: (devolverFoco: boolean) => void; ancora: RefObject<HTMLElement | null> }) {
+  const tituloId = useId();
+  const painel = useRef<HTMLDivElement>(null);
+  const onCloseRef = useRef(onClose);
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  });
+
+  useEffect(() => {
+    painel.current?.querySelector<HTMLInputElement>('input[type=checkbox]')?.focus();
+    const fora = (e: PointerEvent) => {
+      if (!ancora.current?.contains(e.target as Node)) onCloseRef.current(false);
+    };
+    const esc = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return;
+      e.stopPropagation();
+      onCloseRef.current(true);
+    };
+    document.addEventListener('pointerdown', fora);
+    document.addEventListener('keydown', esc, true);
+    return () => {
+      document.removeEventListener('pointerdown', fora);
+      document.removeEventListener('keydown', esc, true);
+    };
+  }, [ancora]);
+
+  return (
+    <div
+      ref={painel}
+      role="dialog"
+      aria-labelledby={tituloId}
+      className="absolute right-0 top-full mt-2 z-30 w-[40rem] rounded-xl border border-neutral-200 bg-white p-4 shadow-xl animate-fade-in"
+    >
+      <h2 id={tituloId} className="sr-only">
+        Categorias
+      </h2>
+      <CategoriasCheckboxes selecionadas={selecionadas} onChange={onChange} />
     </div>
   );
 }
