@@ -1,9 +1,11 @@
 import type {
   CategoriaProspeccao,
+  FecharProspectRequest,
   LtoProspectRequest,
   LtoProspectResponse,
   PaginaBuscaProspect,
   PaginaProspects,
+  PerderProspectRequest,
   ProspectResponse,
   SalvarProspectRequest,
   StatusProspect,
@@ -70,6 +72,16 @@ export const prospeccaoApi = {
 
   descartar: async (id: number): Promise<ProspectResponse> => {
     const { data } = await api.post<ProspectResponse>(`/prospeccao/prospects/${id}/descartar`);
+    return data;
+  },
+
+  fechar: async (id: number, payload: FecharProspectRequest): Promise<ProspectResponse> => {
+    const { data } = await api.post<ProspectResponse>(`/prospeccao/prospects/${id}/fechar`, payload);
+    return data;
+  },
+
+  perder: async (id: number, payload: PerderProspectRequest): Promise<ProspectResponse> => {
+    const { data } = await api.post<ProspectResponse>(`/prospeccao/prospects/${id}/perder`, payload);
     return data;
   },
 

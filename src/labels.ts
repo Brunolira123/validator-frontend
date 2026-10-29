@@ -1,6 +1,7 @@
 import type {
   CategoriaProspeccao,
   FuncaoEquipamento,
+  MotivoPerda,
   Perfil,
   StatusProspect,
   TemperaturaNegociacao,
@@ -52,8 +53,17 @@ export const gruposCategoriaProspeccao: { titulo: string; categorias: CategoriaP
 export const statusProspectLabel: Record<StatusProspect, string> = {
   NOVO: 'Novo',
   VISITADO: 'Visitado',
+  FECHADO: 'Fechado',
   LTO: 'LTO',
+  PERDIDO: 'Perdido',
   DESCARTADO: 'Descartado',
+};
+
+export const motivoPerdaLabel: Record<MotivoPerda, string> = {
+  PRECO: 'Preço',
+  CONCORRENTE: 'Concorrente',
+  SEM_INTERESSE: 'Sem interesse',
+  OUTRO: 'Outro',
 };
 
 export const temperaturaLabel: Record<TemperaturaNegociacao, string> = {
@@ -64,6 +74,7 @@ export const temperaturaLabel: Record<TemperaturaNegociacao, string> = {
 
 const dataHora = new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
 const dataCurta = new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit', timeZone: 'UTC' });
+const dataCompleta = new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeZone: 'UTC' });
 
 /** ISO (com fuso) → "15/10/2026 07:00" no horário do navegador. */
 export function formatarDataHora(iso: string): string {
@@ -73,6 +84,26 @@ export function formatarDataHora(iso: string): string {
 /** "2026-10-14" (LocalDate) → "14/10". UTC para não voltar um dia em fusos negativos. */
 export function formatarDiaMes(data: string): string {
   return dataCurta.format(new Date(`${data}T00:00:00Z`));
+}
+
+/** "2026-10-29" (LocalDate) → "29/10/2026". UTC para não voltar um dia em fusos negativos. */
+export function formatarData(data: string): string {
+  return dataCompleta.format(new Date(`${data}T00:00:00Z`));
+}
+
+/** Hoje no fuso do aparelho, como yyyy-MM-dd (valor de input type="date"). */
+export function hojeIso(): string {
+  return new Date().toLocaleDateString('sv-SE');
+}
+
+/** Máscara progressiva de CNPJ numérico: 12345678000190 → 12.345.678/0001-90. */
+export function mascararCnpj(valor: string): string {
+  const d = valor.replace(/\D/g, '').slice(0, 14);
+  return d
+    .replace(/^(\d{2})(\d)/, '$1.$2')
+    .replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3')
+    .replace(/\.(\d{3})(\d)/, '.$1/$2')
+    .replace(/(\d{4})(\d)/, '$1-$2');
 }
 
 /** "agora", "há 5 min", "há 3 h", "há 2 dias". */

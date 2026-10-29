@@ -88,7 +88,9 @@ export type CategoriaProspeccao =
   | 'EMPORIO'
   | 'BEBIDAS';
 
-export type StatusProspect = 'NOVO' | 'VISITADO' | 'LTO' | 'DESCARTADO';
+/** NOVO -> VISITADO -> FECHADO (virou Cliente) -> LTO (Levantamento). Saídas: PERDIDO (após visita) e DESCARTADO. */
+export type StatusProspect = 'NOVO' | 'VISITADO' | 'FECHADO' | 'LTO' | 'PERDIDO' | 'DESCARTADO';
+export type MotivoPerda = 'PRECO' | 'CONCORRENTE' | 'SEM_INTERESSE' | 'OUTRO';
 export type ResultadoVisita = 'ATENDEU' | 'NAO_ATENDEU';
 export type TemperaturaNegociacao = 'FRIA' | 'MORNA' | 'QUENTE';
 export type OrigemProspect = 'GOOGLE' | 'MANUAL' | 'CRM';
@@ -145,9 +147,15 @@ export interface ProspectResponse {
   responsavelId: number;
   responsavelNome: string;
   clienteId: number | null;
+  /** LocalDate do fechamento do contrato. */
+  fechadoEm: string | null;
+  motivoPerda: MotivoPerda | null;
+  observacaoPerda: string | null;
   criadoEm: string;
   /** null quando o Google não respondeu, o lugar sumiu ou o limite diário acabou. Respostas de POST vêm sempre null. */
   lugar: LugarEncontrado | null;
+  /** Selo do CNPJ: só na resposta do fechamento (e null se a Receita estiver fora do ar). */
+  perfil?: PerfilTributario | null;
 }
 
 export interface PaginaProspects {
@@ -165,8 +173,20 @@ export interface VisitaProspectRequest {
   longitude?: number;
 }
 
-export interface LtoProspectRequest {
+export interface FecharProspectRequest {
   cnpj: string;
+  /** yyyy-MM-dd; padrão hoje no backend. */
+  dataFechamento?: string;
+  observacao?: string;
+}
+
+export interface PerderProspectRequest {
+  motivo: MotivoPerda;
+  observacao?: string;
+}
+
+/** O cliente vem do fechamento: só o dimensionamento do levantamento. */
+export interface LtoProspectRequest {
   qtdServidores?: number;
   qtdPdvs?: number;
   qtdRetaguardas?: number;

@@ -4,7 +4,7 @@ import { ChevronLeft, ChevronRight, CloudOff, Inbox, MapPin, Store } from 'lucid
 import { prospeccaoApi } from '../api/prospeccao';
 import { mensagemErro } from '../api/erro';
 import { useIsAdmin } from '../stores/authStore';
-import { categoriaProspeccaoLabel, formatarDataHora, statusProspectLabel, temperaturaLabel } from '../labels';
+import { categoriaProspeccaoLabel, formatarData, formatarDataHora, statusProspectLabel, temperaturaLabel } from '../labels';
 import type { ProspectResponse, StatusProspect, TemperaturaNegociacao } from '../types/api';
 import { AcoesProspect } from './AcoesProspect';
 import { Button } from './Button';
@@ -178,12 +178,18 @@ function ProspectCard({ prospect: p, mostrarResponsavel }: { prospect: ProspectR
       nome={nome}
     />
   );
-  const detalhe = (p.visitadoEm || mostrarResponsavel) && (
-    <p className="text-xs text-neutral-500">
-      {p.visitadoEm && <>Visitado em {formatarDataHora(p.visitadoEm)}</>}
-      {p.visitadoEm && mostrarResponsavel && ' · '}
-      {mostrarResponsavel && <>{p.responsavelNome}</>}
-    </p>
+  // Fechado mostra a data do contrato; antes disso, a da última visita
+  const quando = p.fechadoEm
+    ? `Fechado em ${formatarData(p.fechadoEm)}`
+    : p.visitadoEm
+      ? `Visitado em ${formatarDataHora(p.visitadoEm)}`
+      : null;
+  const linha = [quando, mostrarResponsavel ? p.responsavelNome : null].filter(Boolean).join(' · ');
+  const detalhe = (linha || p.observacaoPerda) && (
+    <div className="text-xs text-neutral-500 space-y-0.5">
+      {linha && <p>{linha}</p>}
+      {p.status === 'PERDIDO' && p.observacaoPerda && <p className="break-words italic">“{p.observacaoPerda}”</p>}
+    </div>
   );
 
   if (p.lugar) {
@@ -192,6 +198,7 @@ function ProspectCard({ prospect: p, mostrarResponsavel }: { prospect: ProspectR
       <LugarCard
         lugar={{ ...p.lugar, prospectId: p.id, statusProspect: p.status, temperatura: p.temperatura, deOutroComercial: false }}
         detalhe={detalhe}
+        motivoPerda={p.motivoPerda}
         acoes={acoes}
       />
     );
@@ -205,7 +212,7 @@ function ProspectCard({ prospect: p, mostrarResponsavel }: { prospect: ProspectR
       <div className="flex-1 min-w-0 p-4 flex flex-col gap-2">
         <h3 className="font-semibold text-neutral-900 break-words leading-snug">{nome}</h3>
         <div className="-mt-0.5">
-          <StatusProspectBadge status={p.status} temperatura={p.temperatura} />
+          <StatusProspectBadge status={p.status} temperatura={p.temperatura} motivoPerda={p.motivoPerda} />
         </div>
         {detalhe}
         <p className="flex items-start gap-1.5 text-sm text-neutral-600">

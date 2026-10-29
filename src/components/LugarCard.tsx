@@ -3,7 +3,7 @@ import { MapPin, Navigation } from 'lucide-react';
 import { FotoLugar } from './FotoLugar';
 import { DeOutroComercialBadge, StatusProspectBadge } from './StatusProspectBadge';
 import { categoriaProspeccaoLabel } from '../labels';
-import type { LugarEncontrado } from '../types/api';
+import type { LugarEncontrado, MotivoPerda } from '../types/api';
 
 interface Props {
   lugar: LugarEncontrado;
@@ -11,13 +11,15 @@ interface Props {
   acoes?: ReactNode;
   /** Linha extra abaixo do status (ex.: data da visita em Meus prospects). */
   detalhe?: ReactNode;
+  /** Motivo do PERDIDO no badge (a busca não traz; Meus prospects traz). */
+  motivoPerda?: MotivoPerda | null;
 }
 
 /**
  * Resultado da busca no estilo do Google: foto, nome, endereço e o caminho até a loja.
  * Sem nota, avaliações, telefone ou site: esses campos ficam fora da busca (custo).
  */
-export function LugarCard({ lugar, acoes, detalhe }: Props) {
+export function LugarCard({ lugar, acoes, detalhe, motivoPerda }: Props) {
   const nome = lugar.nome ?? 'Sem nome no Google';
   const fechadoTemporariamente = lugar.statusFuncionamento === 'CLOSED_TEMPORARILY';
 
@@ -33,7 +35,11 @@ export function LugarCard({ lugar, acoes, detalhe }: Props) {
               <DeOutroComercialBadge />
             ) : (
               lugar.statusProspect && (
-                <StatusProspectBadge status={lugar.statusProspect} temperatura={lugar.temperatura} />
+                <StatusProspectBadge
+                  status={lugar.statusProspect}
+                  temperatura={lugar.temperatura}
+                  motivoPerda={motivoPerda}
+                />
               )
             )}
           </div>

@@ -1,11 +1,13 @@
 import { UserRound } from 'lucide-react';
-import { statusProspectLabel, temperaturaLabel } from '../labels';
-import type { StatusProspect, TemperaturaNegociacao } from '../types/api';
+import { motivoPerdaLabel, statusProspectLabel, temperaturaLabel } from '../labels';
+import type { MotivoPerda, StatusProspect, TemperaturaNegociacao } from '../types/api';
 
 const corStatus: Record<StatusProspect, string> = {
   NOVO: 'bg-vr-50 text-vr-800',
   VISITADO: 'bg-neutral-100 text-neutral-700',
-  LTO: 'bg-green-100 text-green-700',
+  FECHADO: 'bg-green-100 text-green-800',
+  LTO: 'bg-green-700 text-white',
+  PERDIDO: 'bg-neutral-200 text-neutral-700',
   DESCARTADO: 'bg-neutral-100 text-neutral-500',
 };
 
@@ -18,14 +20,23 @@ const corTemperatura: Record<TemperaturaNegociacao, { className: string; dot: st
 
 const base = 'inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full whitespace-nowrap';
 
-/** Status do funil; visitado com temperatura mostra a cor da negociação. */
+/** Status do funil; visitado com temperatura mostra a cor da negociação e perdido mostra o motivo. */
 export function StatusProspectBadge({
   status,
   temperatura,
+  motivoPerda,
 }: {
   status: StatusProspect;
   temperatura?: TemperaturaNegociacao | null;
+  motivoPerda?: MotivoPerda | null;
 }) {
+  if (status === 'PERDIDO' && motivoPerda) {
+    return (
+      <span className={`${base} ${corStatus.PERDIDO}`}>
+        Perdido · {motivoPerdaLabel[motivoPerda]}
+      </span>
+    );
+  }
   if (status === 'VISITADO' && temperatura) {
     const { className, dot } = corTemperatura[temperatura];
     return (
