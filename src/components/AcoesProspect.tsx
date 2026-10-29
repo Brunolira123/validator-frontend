@@ -110,16 +110,17 @@ export function AcoesProspect({ prospectId, status, atendeu, nome, salvar }: Pro
       {aberto?.tipo === 'lto' && <LtoModal prospectId={aberto.id} nome={nome} onClose={() => setAberto(null)} />}
       {aberto?.tipo === 'descartar' && (
         <ConfirmarExclusao
-          titulo="Descartar prospect?"
+          titulo={`Descartar ${nome}?`}
           rotuloConfirmar="Descartar"
-          aviso="Sai do funil, mas continua em Meus prospects (filtro Descartado). Uma nova visita traz de volta."
+          aviso="Use quando não houver interesse ou não for público-alvo."
           onConfirmar={() => descartarMutation.mutate()}
           onCancelar={() => setAberto(null)}
           excluindo={descartarMutation.isPending}
           erro={descartarMutation.isError ? mensagemErro(descartarMutation.error, 'Erro ao descartar') : null}
         >
           <p className="break-words">
-            <span className="font-medium text-neutral-900">{nome}</span> não tem interesse ou não é público-alvo.
+            Ele sai da sua lista e fica livre: outro comercial pode assumir. Se você registrar uma nova visita antes
+            disso, ele volta para você.
           </p>
         </ConfirmarExclusao>
       )}

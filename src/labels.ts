@@ -42,6 +42,13 @@ export const categoriaProspeccaoLabel: Record<CategoriaProspeccao, string> = {
 
 export const categoriasProspeccao = Object.keys(categoriaProspeccaoLabel) as CategoriaProspeccao[];
 
+/** Grupos do filtro de categorias (painel no celular, inline no desktop). */
+export const gruposCategoriaProspeccao: { titulo: string; categorias: CategoriaProspeccao[] }[] = [
+  { titulo: 'Mercados', categorias: ['SUPERMERCADO', 'HIPERMERCADO', 'MERCADO', 'ATACADO'] },
+  { titulo: 'Perecíveis', categorias: ['HORTIFRUTI', 'ACOUGUE', 'PEIXARIA', 'PADARIA'] },
+  { titulo: 'Outros', categorias: ['CONVENIENCIA', 'EMPORIO', 'BEBIDAS'] },
+];
+
 export const statusProspectLabel: Record<StatusProspect, string> = {
   NOVO: 'Novo',
   VISITADO: 'Visitado',
@@ -54,11 +61,6 @@ export const temperaturaLabel: Record<TemperaturaNegociacao, string> = {
   MORNA: 'Morna',
   QUENTE: 'Quente',
 };
-
-export const ufs = [
-  'AC', 'AL', 'AM', 'AP', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MG', 'MS', 'MT', 'PA',
-  'PB', 'PE', 'PI', 'PR', 'RJ', 'RN', 'RO', 'RR', 'RS', 'SC', 'SE', 'SP', 'TO',
-] as const;
 
 const dataHora = new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
 const dataCurta = new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit', timeZone: 'UTC' });
