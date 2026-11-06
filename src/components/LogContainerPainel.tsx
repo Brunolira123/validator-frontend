@@ -1,20 +1,15 @@
 import { useEffect, useRef, useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { ArrowLeft, Check, Copy, Download, Info, Loader2, RefreshCw, ShieldAlert } from 'lucide-react';
+import { ArrowLeft, Check, Copy, Download, Info, RefreshCw, ShieldAlert } from 'lucide-react';
 import { monitorApi } from '../api/monitor';
 import { mensagemErro } from '../api/erro';
 import { ErrorAlert } from './ErrorAlert';
+import { AguardandoAgente } from './AguardandoAgente';
 import type { PedidoLog } from '../types/api';
 
 const opcoesLinhas = [100, 200, 500] as const;
 
 const aguardando = (p?: PedidoLog) => !p || p.status === 'PENDENTE' || p.status === 'ENTREGUE';
-
-/** 75 → "1 min 15 s" */
-function duracao(segundos: number) {
-  if (segundos < 60) return `${segundos} s`;
-  return `${Math.floor(segundos / 60)} min ${segundos % 60} s`;
-}
 
 /** Fora de HTTPS o navigator.clipboard não existe: cai no execCommand. */
 async function copiarTexto(texto: string) {
@@ -63,7 +58,6 @@ export function LogContainerPainel({ clienteId, clienteNome, container, onVoltar
   const [linhas, setLinhas] = useState<number>(100);
   const [pedidoId, setPedidoId] = useState<number | null>(null);
   const [inicio, setInicio] = useState(() => Date.now());
-  const [agora, setAgora] = useState(() => Date.now());
   const [copiado, setCopiado] = useState(false);
   const [erroCopia, setErroCopia] = useState(false);
 
@@ -72,7 +66,6 @@ export function LogContainerPainel({ clienteId, clienteNome, container, onVoltar
     onMutate: () => {
       setPedidoId(null);
       setInicio(Date.now());
-      setAgora(Date.now());
       setCopiado(false);
     },
     onSuccess: (p) => setPedidoId(p.pedidoId),
@@ -102,14 +95,6 @@ export function LogContainerPainel({ clienteId, clienteNome, container, onVoltar
 
   const esperando = pedir.isPending || (pedidoId != null && aguardando(pedido) && !erroPolling);
 
-  // Relógio do "Aguardando o agente…": conta a partir do clique, sem depender do relógio do servidor
-  useEffect(() => {
-    if (!esperando) return;
-    const t = setInterval(() => setAgora(Date.now()), 1_000);
-    return () => clearInterval(t);
-  }, [esperando]);
-
-  const decorrido = Math.max(0, Math.floor((agora - inicio) / 1_000));
   // Containers com TTY mandam CRLF: sem normalizar, o CR sobra no copiar/baixar e em alguns visualizadores
   const log = pedido?.status === 'CONCLUIDO' && pedido.texto != null ? pedido.texto.replace(/\r\n?/g, '\n') : null;
   const apagado = pedido?.status === 'CONCLUIDO' && pedido.texto == null && !!pedido.textoApagadoEm;
@@ -189,14 +174,7 @@ export function LogContainerPainel({ clienteId, clienteNome, container, onVoltar
       {pedir.error && <ErrorAlert>{mensagemErro(pedir.error, 'Erro ao pedir o log')}</ErrorAlert>}
       {erroPolling && <ErrorAlert>{mensagemErro(erroPolling, 'Erro ao acompanhar o pedido de log')}</ErrorAlert>}
 
-      {esperando && (
-        <div role="status" className="flex items-center gap-2 rounded-lg bg-neutral-50 border border-neutral-200 px-4 py-6 text-sm text-neutral-600">
-          <Loader2 size={16} className="animate-spin shrink-0 text-vr-600" aria-hidden="true" />
-          <span>
-            Aguardando o agente… <span className="tabular-nums text-neutral-400">{duracao(decorrido)}</span>
-          </span>
-        </div>
-      )}
+      {esperando && <AguardandoAgente inicio={inicio} />}
 
       {pedido?.status === 'ERRO' && <ErrorAlert>{pedido.erro || 'O agente não conseguiu ler o log.'}</ErrorAlert>}
 

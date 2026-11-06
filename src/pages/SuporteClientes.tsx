@@ -1,17 +1,25 @@
 import { useState, type ReactNode } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { AlertTriangle, Container, Database, LifeBuoy, Search } from 'lucide-react';
+import { AlertTriangle, Container, Database, LifeBuoy, Search, Upload } from 'lucide-react';
 import { monitorApi } from '../api/monitor';
 import { mensagemErro } from '../api/erro';
+import { Button } from '../components/Button';
 import { Card } from '../components/Card';
 import { ErrorAlert } from '../components/ErrorAlert';
 import { SituacaoAgenteBadge } from '../components/SituacaoAgenteBadge';
 import { AmbienteClienteModal } from '../components/AmbienteClienteModal';
+import { AtualizarAgentesModal } from '../components/AtualizarAgentesModal';
+import { BadgeAtualizacao } from '../components/BadgeAtualizacao';
+import { useIsAdmin } from '../stores/authStore';
+import { abaixoDe, situacaoAtualizacao, versaoMaisNova } from '../versaoAgente';
 import { tempoDesde } from '../labels';
 import type { SuporteClienteResponse } from '../types/api';
 
 const paradosDe = (c: SuporteClienteResponse) => (c.ambiente?.dockerDisponivel ? c.ambiente.parados : 0);
 const offline = (c: SuporteClienteResponse) => c.situacao === 'OFFLINE';
+const falhaAtualizacao = (c: SuporteClienteResponse) => situacaoAtualizacao(c) === 'FALHA';
+
+type FiltroId = 'parado' | 'offline' | 'desatualizado' | 'falha' | 'piloto';
 
 /** Problemas primeiro: offline, depois com container parado, depois por nome. */
 function comparar(a: SuporteClienteResponse, b: SuporteClienteResponse) {
@@ -25,12 +33,23 @@ function comparar(a: SuporteClienteResponse, b: SuporteClienteResponse) {
 /** Sem acento e minúsculo: "São" acha "sao". */
 const normalizar = (s: string) => s.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase();
 
-function Filtro({ ativo, onClick, children }: { ativo: boolean; onClick: () => void; children: ReactNode }) {
+function Filtro({
+  ativo,
+  onClick,
+  title,
+  children,
+}: {
+  ativo: boolean;
+  onClick: () => void;
+  title?: string;
+  children: ReactNode;
+}) {
   return (
     <button
       type="button"
       aria-pressed={ativo}
       onClick={onClick}
+      title={title}
       className={`min-h-11 md:min-h-9 px-3 rounded-lg border text-sm font-medium whitespace-nowrap transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-vr-500 ${
         ativo ? 'bg-vr-600 border-vr-600 text-white' : 'bg-white border-neutral-300 text-neutral-600 hover:bg-neutral-100'
       }`}
@@ -49,6 +68,11 @@ function ClienteCard({ cliente, onDetalhes }: { cliente: SuporteClienteResponse;
         <p className="font-semibold text-neutral-900 min-w-0 break-words">{cliente.nome}</p>
         <SituacaoAgenteBadge situacao={cliente.situacao} />
       </div>
+      {cliente.versaoAlvoAgente && (
+        <div className="mt-2">
+          <BadgeAtualizacao cliente={cliente} />
+        </div>
+      )}
 
       <p className="mt-3 flex items-center gap-2 text-sm text-neutral-600">
         <Database size={16} className="text-neutral-400 shrink-0" aria-hidden="true" />
@@ -100,8 +124,10 @@ function ClienteCard({ cliente, onDetalhes }: { cliente: SuporteClienteResponse;
 
 export default function SuporteClientes() {
   const [busca, setBusca] = useState('');
-  const [soParados, setSoParados] = useState(false);
-  const [soOffline, setSoOffline] = useState(false);
+  // Filtros ligados somam (E): "Offline" + "Piloto" = clientes do piloto que estão offline
+  const [filtros, setFiltros] = useState<Set<FiltroId>>(() => new Set());
+  const [atualizarAberto, setAtualizarAberto] = useState(false);
+  const isAdmin = useIsAdmin();
   // Guarda o id, não o objeto: o modal acompanha o refetch da lista
   const [detalhesId, setDetalhesId] = useState<number | null>(null);
 
@@ -112,34 +138,62 @@ export default function SuporteClientes() {
     refetchInterval: 60_000,
   });
 
+  // "Desatualizado" = abaixo da versão estável mais nova em uso (ou sem versão informada)
+  const referencia = clientes ? versaoMaisNova(clientes) : null;
+  const opcoesFiltro: { id: FiltroId; label: string; title?: string; teste: (c: SuporteClienteResponse) => boolean }[] = [
+    { id: 'parado', label: 'Com container parado', teste: (c) => paradosDe(c) > 0 },
+    { id: 'offline', label: 'Offline', teste: offline },
+    {
+      id: 'desatualizado',
+      label: 'Desatualizados',
+      title: referencia ? `Agente abaixo da ${referencia}, a mais nova em uso` : undefined,
+      teste: (c) => !!referencia && abaixoDe(c.versaoAgente, referencia),
+    },
+    { id: 'falha', label: 'Falha na atualização', teste: falhaAtualizacao },
+    { id: 'piloto', label: 'Piloto', teste: (c) => c.piloto },
+  ];
+  const contagem = (id: FiltroId) => clientes?.filter(opcoesFiltro.find((o) => o.id === id)!.teste).length ?? 0;
+
+  const alternarFiltro = (id: FiltroId) =>
+    setFiltros((atual) => {
+      const novo = new Set(atual);
+      if (novo.has(id)) novo.delete(id);
+      else novo.add(id);
+      return novo;
+    });
+
   const termo = normalizar(busca.trim());
+  const ativos = opcoesFiltro.filter((o) => filtros.has(o.id));
   const filtrados = clientes
-    ?.filter(
-      (c) =>
-        (!termo || normalizar(c.nome).includes(termo)) &&
-        (!soParados || paradosDe(c) > 0) &&
-        (!soOffline || offline(c)),
-    )
+    ?.filter((c) => (!termo || normalizar(c.nome).includes(termo)) && ativos.every((o) => o.teste(c)))
     .sort(comparar);
 
-  const comParado = clientes?.filter((c) => paradosDe(c) > 0).length ?? 0;
-  const qtdOffline = clientes?.filter(offline).length ?? 0;
+  const comParado = contagem('parado');
+  const qtdOffline = contagem('offline');
   const detalhes = clientes?.find((c) => c.id === detalhesId);
 
   return (
     <div>
-      <div className="mb-5">
-        <h1 className="text-2xl font-bold text-neutral-900">Clientes</h1>
-        <p className="text-sm text-neutral-500 mt-1">
-          {clientes?.length ?? 0} cliente(s)
-          {qtdOffline > 0 && <span className="text-neutral-700 font-medium"> · {qtdOffline} offline</span>}
-          {comParado > 0 && <span className="text-red-600 font-medium"> · {comParado} com container parado</span>}
-        </p>
+      <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold text-neutral-900">Clientes</h1>
+          <p className="text-sm text-neutral-500 mt-1">
+            {clientes?.length ?? 0} cliente(s)
+            {qtdOffline > 0 && <span className="text-neutral-700 font-medium"> · {qtdOffline} offline</span>}
+            {comParado > 0 && <span className="text-red-600 font-medium"> · {comParado} com container parado</span>}
+          </p>
+        </div>
+        {isAdmin && clientes && clientes.length > 0 && (
+          <Button onClick={() => setAtualizarAberto(true)}>
+            <Upload size={16} aria-hidden="true" />
+            Atualizar agentes
+          </Button>
+        )}
       </div>
 
       {clientes && clientes.length > 0 && (
-        <div className="mb-4 flex flex-col md:flex-row md:items-center gap-2">
-          <div className="relative md:w-80">
+        <div className="mb-4 flex flex-wrap items-center gap-2">
+          <div className="relative w-full md:w-80">
             <Search
               size={16}
               aria-hidden="true"
@@ -155,12 +209,11 @@ export default function SuporteClientes() {
             />
           </div>
           <div role="group" aria-label="Filtrar clientes" className="flex flex-wrap gap-2">
-            <Filtro ativo={soParados} onClick={() => setSoParados((v) => !v)}>
-              Com container parado ({comParado})
-            </Filtro>
-            <Filtro ativo={soOffline} onClick={() => setSoOffline((v) => !v)}>
-              Offline ({qtdOffline})
-            </Filtro>
+            {opcoesFiltro.map((o) => (
+              <Filtro key={o.id} ativo={filtros.has(o.id)} onClick={() => alternarFiltro(o.id)} title={o.title}>
+                {o.label} ({contagem(o.id)})
+              </Filtro>
+            ))}
           </div>
         </div>
       )}
@@ -191,6 +244,10 @@ export default function SuporteClientes() {
       </div>
 
       {detalhes && <AmbienteClienteModal cliente={detalhes} onClose={() => setDetalhesId(null)} />}
+
+      {atualizarAberto && clientes && (
+        <AtualizarAgentesModal clientes={clientes} onClose={() => setAtualizarAberto(false)} />
+      )}
     </div>
   );
 }

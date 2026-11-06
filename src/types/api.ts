@@ -503,12 +503,55 @@ export interface SuporteClienteResponse {
   versaoAgente: string | null;
   /** null: o agente nunca enviou o ambiente (versão antiga). */
   ambiente: AmbienteCliente | null;
+  /** Versão que o vrip-updater deve instalar; null = nenhuma atualização pendente. */
+  versaoAlvoAgente: string | null;
+  piloto: boolean;
+  /** null: o vrip-updater nunca consultou o portal (não instalado). */
+  updater: UpdaterAgente | null;
+  /** null: nunca houve tentativa de atualização. */
+  ultimaAtualizacao: UltimaAtualizacaoAgente | null;
+}
+
+export interface UpdaterAgente {
+  versao: string | null;
+  ultimoContato: string;
+}
+
+export type StatusAtualizacao = 'ATUALIZADO' | 'FALHOU' | 'ROLLBACK';
+
+export interface UltimaAtualizacaoAgente {
+  status: StatusAtualizacao;
+  versaoAnterior: string | null;
+  versaoAlvo: string;
+  detalhe: string | null;
+  em: string;
+}
+
+export type EscopoVersaoAlvo = 'PILOTO' | 'TODOS' | 'IDS';
+
+export interface VersaoAlvoLoteRequest {
+  versao: string;
+  escopo: EscopoVersaoAlvo;
+  /** Só no escopo IDS. */
+  ids?: number[];
+}
+
+/** Iniciar (container parado) ou reiniciar (rodando). */
+export type TipoAcaoContainer = 'START' | 'RESTART';
+
+/** GET .../containers/{nome}/acao/{pedidoId} */
+export interface PedidoAcao {
+  tipo: TipoAcaoContainer;
+  status: StatusPedidoLog;
+  /** Em ERRO: o motivo informado pelo agente. */
+  erro: string | null;
+  recebidoEm: string | null;
 }
 
 /** Pedido de log de um container: o agente (2.3.0+) busca, lê as últimas N linhas e devolve. */
 export type StatusPedidoLog = 'PENDENTE' | 'ENTREGUE' | 'CONCLUIDO' | 'ERRO' | 'EXPIRADO';
 
-/** 202 do POST .../containers/{nome}/log */
+/** 202 do POST .../containers/{nome}/log e .../acao */
 export interface PedidoLogCriado {
   pedidoId: number;
 }

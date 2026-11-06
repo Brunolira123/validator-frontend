@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { Marca } from './Marca';
+import { Toaster } from './Toaster';
 import { House, LogOut, Menu, UsersRound, X } from 'lucide-react';
 import { useAuthStore, useIsAdmin } from '../stores/authStore';
 import { modulosDoPerfil } from '../modulos';
@@ -133,6 +134,7 @@ export function Layout() {
       <main className="flex-1 min-w-0 p-4 sm:p-6 lg:p-8">
         <Outlet />
       </main>
+      <Toaster />
     </div>
   );
 }

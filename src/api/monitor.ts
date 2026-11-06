@@ -6,6 +6,9 @@ import type {
   PedidoConsulta,
   PedidoLog,
   PedidoLogCriado,
+  PedidoAcao,
+  TipoAcaoContainer,
+  VersaoAlvoLoteRequest,
   SuporteClienteResponse,
   TokenAgenteResponse,
 } from '../types/api';
@@ -72,5 +75,38 @@ export const monitorApi = {
       `/monitor/suporte/clientes/${clienteId}/containers/${encodeURIComponent(container)}/log/${pedidoId}`,
     );
     return data;
+  },
+
+  // START/RESTART: agente 2.4.0+. 404 container fora da foto; 409 offline, agente antigo,
+  // START com o container rodando ou RESTART com ele parado. Clique repetido devolve o pedido aberto
+  pedirAcao: async (clienteId: number, container: string, tipo: TipoAcaoContainer): Promise<PedidoLogCriado> => {
+    const { data } = await api.post<PedidoLogCriado>(
+      `/monitor/suporte/clientes/${clienteId}/containers/${encodeURIComponent(container)}/acao`,
+      null,
+      { params: { tipo } },
+    );
+    return data;
+  },
+
+  pedidoAcao: async (clienteId: number, container: string, pedidoId: number): Promise<PedidoAcao> => {
+    const { data } = await api.get<PedidoAcao>(
+      `/monitor/suporte/clientes/${clienteId}/containers/${encodeURIComponent(container)}/acao/${pedidoId}`,
+    );
+    return data;
+  },
+
+  // ADMIN/DIRETORIA. null cancela a atualização pendente
+  definirVersaoAlvo: async (clienteId: number, versao: string | null): Promise<void> => {
+    await api.put(`/monitor/suporte/clientes/${clienteId}/agente/versao-alvo`, { versao });
+  },
+
+  // ADMIN/DIRETORIA. Quem já roda a versão fica de fora; responde quantos foram marcados
+  definirVersaoAlvoEmLote: async (payload: VersaoAlvoLoteRequest): Promise<number> => {
+    const { data } = await api.post<{ marcados: number }>('/monitor/suporte/agente/versao-alvo', payload);
+    return data.marcados;
+  },
+
+  definirPiloto: async (clienteId: number, piloto: boolean): Promise<void> => {
+    await api.put(`/monitor/suporte/clientes/${clienteId}/piloto`, { piloto });
   },
 };
