@@ -505,19 +505,24 @@ export interface SuporteClienteResponse {
   ambiente: AmbienteCliente | null;
 }
 
-/** Pedido de log de um container: o agente busca, lê as últimas N linhas e devolve. */
+/** Pedido de log de um container: o agente (2.3.0+) busca, lê as últimas N linhas e devolve. */
 export type StatusPedidoLog = 'PENDENTE' | 'ENTREGUE' | 'CONCLUIDO' | 'ERRO' | 'EXPIRADO';
 
+/** 202 do POST .../containers/{nome}/log */
+export interface PedidoLogCriado {
+  pedidoId: number;
+}
+
+/** GET .../containers/{nome}/log/{pedidoId} */
 export interface PedidoLog {
-  id: number;
-  clienteId: number;
-  container: string;
-  linhas: number;
   status: StatusPedidoLog;
-  criadoEm: string;
-  concluidoEm: string | null;
-  /** Preenchido em CONCLUIDO. */
-  log: string | null;
-  /** Preenchido em ERRO (ex.: container não existe mais). */
+  /** Só em CONCLUIDO e dentro da retenção de 1h; depois vem null com textoApagadoEm preenchido. */
+  texto: string | null;
+  /** O agente cortou o começo: só o fim do log, até 256 KB. */
+  truncado: boolean;
+  /** Em ERRO: o motivo informado pelo agente. */
   erro: string | null;
+  /** Quando o agente respondeu (CONCLUIDO ou ERRO). */
+  recebidoEm: string | null;
+  textoApagadoEm: string | null;
 }

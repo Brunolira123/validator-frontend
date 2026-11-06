@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { ArrowLeft, Check, Copy, Download, Loader2, RefreshCw, ShieldAlert } from 'lucide-react';
+import { ArrowLeft, Check, Copy, Download, Info, Loader2, RefreshCw, ShieldAlert } from 'lucide-react';
 import { monitorApi } from '../api/monitor';
 import { mensagemErro } from '../api/erro';
 import { ErrorAlert } from './ErrorAlert';
@@ -75,7 +75,7 @@ export function LogContainerPainel({ clienteId, clienteNome, container, onVoltar
       setAgora(Date.now());
       setCopiado(false);
     },
-    onSuccess: (p) => setPedidoId(p.id),
+    onSuccess: (p) => setPedidoId(p.pedidoId),
   });
   const { mutate } = pedir;
 
@@ -94,8 +94,8 @@ export function LogContainerPainel({ clienteId, clienteNome, container, onVoltar
   };
 
   const { data: pedido, error: erroPolling } = useQuery({
-    queryKey: ['monitor', 'suporte', 'log', pedidoId],
-    queryFn: () => monitorApi.pedidoLog(pedidoId!),
+    queryKey: ['monitor', 'suporte', 'log', clienteId, container, pedidoId],
+    queryFn: () => monitorApi.pedidoLog(clienteId, container, pedidoId!),
     enabled: pedidoId != null,
     refetchInterval: (query) => (aguardando(query.state.data) ? 3_000 : false),
   });
@@ -110,7 +110,9 @@ export function LogContainerPainel({ clienteId, clienteNome, container, onVoltar
   }, [esperando]);
 
   const decorrido = Math.max(0, Math.floor((agora - inicio) / 1_000));
-  const log = pedido?.status === 'CONCLUIDO' ? (pedido.log ?? '') : null;
+  // Containers com TTY mandam CRLF: sem normalizar, o CR sobra no copiar/baixar e em alguns visualizadores
+  const log = pedido?.status === 'CONCLUIDO' && pedido.texto != null ? pedido.texto.replace(/\r\n?/g, '\n') : null;
+  const apagado = pedido?.status === 'CONCLUIDO' && pedido.texto == null && !!pedido.textoApagadoEm;
 
   // Log termina no mais recente: abre rolado até o fim
   const caixaLog = useRef<HTMLPreElement>(null);
@@ -202,8 +204,21 @@ export function LogContainerPainel({ clienteId, clienteNome, container, onVoltar
         <ErrorAlert>O agente não respondeu a tempo. Confira se ele está online e clique em "Atualizar".</ErrorAlert>
       )}
 
+      {apagado && (
+        <p className="flex items-start gap-2 rounded-lg bg-neutral-50 border border-neutral-200 px-3 py-2 text-sm text-neutral-600">
+          <Info size={16} className="mt-0.5 shrink-0 text-neutral-400" aria-hidden="true" />
+          Log apagado após 1h; peça de novo.
+        </p>
+      )}
+
       {log != null && (
         <>
+          {pedido?.truncado && (
+            <p className="flex items-start gap-2 text-xs text-amber-700">
+              <Info size={14} className="mt-0.5 shrink-0" aria-hidden="true" />
+              Mostrando só o fim do log (limite de 256 KB)
+            </p>
+          )}
           <pre
             ref={caixaLog}
             tabIndex={0}

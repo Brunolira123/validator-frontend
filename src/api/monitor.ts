@@ -5,6 +5,7 @@ import type {
   ExecucaoMonitor,
   PedidoConsulta,
   PedidoLog,
+  PedidoLogCriado,
   SuporteClienteResponse,
   TokenAgenteResponse,
 } from '../types/api';
@@ -55,14 +56,21 @@ export const monitorApi = {
     return data;
   },
 
-  // Log de um container: o agente (2.3.0+) busca o pedido em até ~30s, igual ao "Consultar agora"
-  pedirLog: async (clienteId: number, container: string, linhas: number): Promise<PedidoLog> => {
-    const { data } = await api.post<PedidoLog>(`/monitor/suporte/clientes/${clienteId}/logs`, { container, linhas });
+  // Log de um container: o agente (2.3.0+) busca o pedido em até ~30s, igual ao "Consultar agora".
+  // 400 linhas fora de 1..500; 404 container fora da última foto; 409 offline ou agente < 2.3.0
+  pedirLog: async (clienteId: number, container: string, linhas: number): Promise<PedidoLogCriado> => {
+    const { data } = await api.post<PedidoLogCriado>(
+      `/monitor/suporte/clientes/${clienteId}/containers/${encodeURIComponent(container)}/log`,
+      null,
+      { params: { linhas } },
+    );
     return data;
   },
 
-  pedidoLog: async (id: number): Promise<PedidoLog> => {
-    const { data } = await api.get<PedidoLog>(`/monitor/suporte/logs/${id}`);
+  pedidoLog: async (clienteId: number, container: string, pedidoId: number): Promise<PedidoLog> => {
+    const { data } = await api.get<PedidoLog>(
+      `/monitor/suporte/clientes/${clienteId}/containers/${encodeURIComponent(container)}/log/${pedidoId}`,
+    );
     return data;
   },
 };
