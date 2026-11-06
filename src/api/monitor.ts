@@ -4,6 +4,7 @@ import type {
   ClienteMonitoradoResponse,
   ExecucaoMonitor,
   PedidoConsulta,
+  PedidoLog,
   SuporteClienteResponse,
   TokenAgenteResponse,
 } from '../types/api';
@@ -51,6 +52,17 @@ export const monitorApi = {
   // Tela Clientes do Suporte: situação do agente, versão do BD e containers do servidor
   suporteClientes: async (): Promise<SuporteClienteResponse[]> => {
     const { data } = await api.get<SuporteClienteResponse[]>('/monitor/suporte/clientes');
+    return data;
+  },
+
+  // Log de um container: o agente (2.3.0+) busca o pedido em até ~30s, igual ao "Consultar agora"
+  pedirLog: async (clienteId: number, container: string, linhas: number): Promise<PedidoLog> => {
+    const { data } = await api.post<PedidoLog>(`/monitor/suporte/clientes/${clienteId}/logs`, { container, linhas });
+    return data;
+  },
+
+  pedidoLog: async (id: number): Promise<PedidoLog> => {
+    const { data } = await api.get<PedidoLog>(`/monitor/suporte/logs/${id}`);
     return data;
   },
 };

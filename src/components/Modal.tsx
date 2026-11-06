@@ -4,13 +4,14 @@ import { X } from 'lucide-react';
 interface Props {
   title: string;
   onClose: () => void;
-  size?: 'lg' | '2xl';
+  size?: 'lg' | '2xl' | '4xl';
   children: ReactNode;
 }
 
 const sizes = {
   lg: 'sm:max-w-lg',
   '2xl': 'sm:max-w-2xl',
+  '4xl': 'sm:max-w-4xl',
 };
 
 /** Tela cheia no mobile, card centralizado a partir de `sm`. */

@@ -1,12 +1,14 @@
-import { useId, useState, type ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { AlertTriangle, ChevronDown, Container, Database, LifeBuoy, Search } from 'lucide-react';
+import { AlertTriangle, Container, Database, LifeBuoy, Search } from 'lucide-react';
 import { monitorApi } from '../api/monitor';
 import { mensagemErro } from '../api/erro';
 import { Card } from '../components/Card';
 import { ErrorAlert } from '../components/ErrorAlert';
+import { SituacaoAgenteBadge } from '../components/SituacaoAgenteBadge';
+import { AmbienteClienteModal } from '../components/AmbienteClienteModal';
 import { tempoDesde } from '../labels';
-import type { SituacaoAgente, SuporteClienteResponse } from '../types/api';
+import type { SuporteClienteResponse } from '../types/api';
 
 const paradosDe = (c: SuporteClienteResponse) => (c.ambiente?.dockerDisponivel ? c.ambiente.parados : 0);
 const offline = (c: SuporteClienteResponse) => c.situacao === 'OFFLINE';
@@ -21,21 +23,7 @@ function comparar(a: SuporteClienteResponse, b: SuporteClienteResponse) {
 }
 
 /** Sem acento e minúsculo: "São" acha "sao". */
-const normalizar = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
-
-function SituacaoAgenteBadge({ situacao }: { situacao: SituacaoAgente }) {
-  const online = situacao === 'ONLINE';
-  return (
-    <span
-      className={`inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full whitespace-nowrap ${
-        online ? 'bg-green-100 text-green-700' : 'bg-neutral-800 text-white'
-      }`}
-    >
-      <span aria-hidden="true" className={`h-1.5 w-1.5 rounded-full ${online ? 'bg-green-500' : 'bg-neutral-400'}`} />
-      {online ? 'Online' : 'Offline'}
-    </span>
-  );
-}
+const normalizar = (s: string) => s.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase();
 
 function Filtro({ ativo, onClick, children }: { ativo: boolean; onClick: () => void; children: ReactNode }) {
   return (
@@ -52,9 +40,7 @@ function Filtro({ ativo, onClick, children }: { ativo: boolean; onClick: () => v
   );
 }
 
-function ClienteCard({ cliente }: { cliente: SuporteClienteResponse }) {
-  const [aberto, setAberto] = useState(false);
-  const listaId = useId();
+function ClienteCard({ cliente, onDetalhes }: { cliente: SuporteClienteResponse; onDetalhes: () => void }) {
   const { ambiente } = cliente;
 
   return (
@@ -101,44 +87,13 @@ function ClienteCard({ cliente }: { cliente: SuporteClienteResponse }) {
         <p className="mt-1 text-xs text-neutral-400">Atualizado {tempoDesde(ambiente.coletadoEm)}</p>
       )}
 
-      {ambiente?.dockerDisponivel && ambiente.total > 0 && (
-        <>
-          <button
-            type="button"
-            aria-expanded={aberto}
-            aria-controls={listaId}
-            onClick={() => setAberto((v) => !v)}
-            className="mt-3 -ml-2 inline-flex items-center gap-1 min-h-11 md:min-h-8 px-2 rounded-md text-sm font-semibold text-vr-700 hover:bg-vr-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-vr-500"
-          >
-            {aberto ? 'Ocultar ambiente' : 'Ver ambiente'}
-            <ChevronDown
-              size={16}
-              aria-hidden="true"
-              className={`transition-transform ${aberto ? 'rotate-180' : ''}`}
-            />
-          </button>
-          {aberto && (
-            <ul id={listaId} className="mt-2 divide-y divide-neutral-100 border-t border-neutral-100">
-              {/* O backend já manda parados primeiro; reordena para não depender disso */}
-              {[...ambiente.containers]
-                .sort((a, b) => Number(a.rodando) - Number(b.rodando) || a.nome.localeCompare(b.nome))
-                .map((c) => (
-                  <li key={c.nome} className="flex items-center gap-2 py-2 text-sm">
-                    <span className="min-w-0 flex-1 truncate font-medium text-neutral-800" title={c.nome}>
-                      {c.nome}
-                    </span>
-                    <span className="text-xs text-neutral-500 tabular-nums shrink-0">{c.versao ?? '—'}</span>
-                    <span
-                      className={`shrink-0 text-xs font-semibold ${c.rodando ? 'text-green-700' : 'text-red-600'}`}
-                    >
-                      {c.rodando ? 'Rodando' : 'Parado'}
-                    </span>
-                  </li>
-                ))}
-            </ul>
-          )}
-        </>
-      )}
+      <button
+        type="button"
+        onClick={onDetalhes}
+        className="mt-3 -ml-2 inline-flex items-center min-h-11 md:min-h-8 px-2 rounded-md text-sm font-semibold text-vr-700 hover:bg-vr-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-vr-500"
+      >
+        Detalhes
+      </button>
     </Card>
   );
 }
@@ -147,6 +102,8 @@ export default function SuporteClientes() {
   const [busca, setBusca] = useState('');
   const [soParados, setSoParados] = useState(false);
   const [soOffline, setSoOffline] = useState(false);
+  // Guarda o id, não o objeto: o modal acompanha o refetch da lista
+  const [detalhesId, setDetalhesId] = useState<number | null>(null);
 
   const { data: clientes, isLoading, error } = useQuery({
     queryKey: ['monitor', 'suporte', 'clientes'],
@@ -167,6 +124,7 @@ export default function SuporteClientes() {
 
   const comParado = clientes?.filter((c) => paradosDe(c) > 0).length ?? 0;
   const qtdOffline = clientes?.filter(offline).length ?? 0;
+  const detalhes = clientes?.find((c) => c.id === detalhesId);
 
   return (
     <div>
@@ -228,9 +186,11 @@ export default function SuporteClientes() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 items-start">
         {filtrados?.map((c) => (
-          <ClienteCard key={c.id} cliente={c} />
+          <ClienteCard key={c.id} cliente={c} onDetalhes={() => setDetalhesId(c.id)} />
         ))}
       </div>
+
+      {detalhes && <AmbienteClienteModal cliente={detalhes} onClose={() => setDetalhesId(null)} />}
     </div>
   );
 }

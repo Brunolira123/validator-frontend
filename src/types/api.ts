@@ -504,3 +504,20 @@ export interface SuporteClienteResponse {
   /** null: o agente nunca enviou o ambiente (versão antiga). */
   ambiente: AmbienteCliente | null;
 }
+
+/** Pedido de log de um container: o agente busca, lê as últimas N linhas e devolve. */
+export type StatusPedidoLog = 'PENDENTE' | 'ENTREGUE' | 'CONCLUIDO' | 'ERRO' | 'EXPIRADO';
+
+export interface PedidoLog {
+  id: number;
+  clienteId: number;
+  container: string;
+  linhas: number;
+  status: StatusPedidoLog;
+  criadoEm: string;
+  concluidoEm: string | null;
+  /** Preenchido em CONCLUIDO. */
+  log: string | null;
+  /** Preenchido em ERRO (ex.: container não existe mais). */
+  erro: string | null;
+}
