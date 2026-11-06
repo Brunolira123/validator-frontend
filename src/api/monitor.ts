@@ -4,6 +4,7 @@ import type {
   ClienteMonitoradoResponse,
   ExecucaoMonitor,
   PedidoConsulta,
+  SuporteClienteResponse,
   TokenAgenteResponse,
 } from '../types/api';
 import api from './client';
@@ -44,6 +45,12 @@ export const monitorApi = {
 
   pedido: async (id: number): Promise<PedidoConsulta> => {
     const { data } = await api.get<PedidoConsulta>(`/monitor/pedidos/${id}`);
+    return data;
+  },
+
+  // Tela Clientes do Suporte: situação do agente, versão do BD e containers do servidor
+  suporteClientes: async (): Promise<SuporteClienteResponse[]> => {
+    const { data } = await api.get<SuporteClienteResponse[]>('/monitor/suporte/clientes');
     return data;
   },
 };

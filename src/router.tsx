@@ -8,6 +8,7 @@ import Relatorios from './pages/Relatorios';
 import Monitoramento from './pages/Monitoramento';
 import MonitoramentoCliente from './pages/MonitoramentoCliente';
 import Usuarios from './pages/Usuarios';
+import SuporteClientes from './pages/SuporteClientes';
 import NotFound from './pages/NotFound';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { Layout } from './components/Layout';
@@ -18,6 +19,7 @@ import { modulo } from './modulos';
 
 const comercial = modulo('comercial');
 const monitoramento = modulo('monitoramento');
+const suporte = modulo('suporte');
 
 export const router = createBrowserRouter([
   {
@@ -52,6 +54,14 @@ export const router = createBrowserRouter([
         children: [
           { index: true, element: <Monitoramento /> },
           { path: 'clientes/:id', element: <MonitoramentoCliente /> },
+        ],
+      },
+      {
+        path: 'suporte',
+        element: <ProtectedRoute perfis={suporte.perfis} />,
+        children: [
+          { index: true, element: <Navigate to="clientes" replace /> },
+          { path: 'clientes', element: <SuporteClientes /> },
         ],
       },
 

@@ -469,3 +469,38 @@ export interface UsuarioAtualizacaoRequest {
   /** Vazio mantém a senha atual. */
   senha?: string;
 }
+
+// ===== Suporte (ambiente dos clientes, enviado pelo agente) =====
+export type SituacaoAgente = 'ONLINE' | 'OFFLINE';
+
+export interface ContainerAmbiente {
+  nome: string;
+  versao: string | null;
+  rodando: boolean;
+}
+
+export interface AmbienteCliente {
+  /** Quando o agente coletou (relógio do cliente). */
+  coletadoEm: string;
+  recebidoEm: string;
+  dockerDisponivel: boolean;
+  /** Preenchido quando o Docker não respondeu. */
+  erro: string | null;
+  total: number;
+  rodando: number;
+  parados: number;
+  /** Parados primeiro, depois por nome. */
+  containers: ContainerAmbiente[];
+}
+
+export interface SuporteClienteResponse {
+  id: number;
+  nome: string;
+  situacao: SituacaoAgente;
+  ultimoContato: string | null;
+  /** Versão do BD (VRMaster), da última execução. */
+  versaoBanco: string | null;
+  versaoAgente: string | null;
+  /** null: o agente nunca enviou o ambiente (versão antiga). */
+  ambiente: AmbienteCliente | null;
+}

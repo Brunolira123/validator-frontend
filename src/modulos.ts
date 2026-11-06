@@ -37,11 +37,11 @@ export const modulos: Modulo[] = [
   {
     id: 'suporte',
     label: 'Suporte',
-    descricao: 'Atendimento e chamados',
+    descricao: 'Ambiente e containers dos clientes',
     icone: LifeBuoy,
     rota: '/suporte',
     perfis: ['ADMIN', 'DIRETORIA', 'SUPORTE'],
-    ativo: false,
+    ativo: true,
   },
   {
     id: 'diretoria',
