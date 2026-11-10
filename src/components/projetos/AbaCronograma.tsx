@@ -6,6 +6,7 @@ import { Card } from '../Card';
 import { Button } from '../Button';
 import { ErrorAlert } from '../ErrorAlert';
 import { arvoreDe } from './atividades';
+import { PdfClienteCard } from './PdfClienteCard';
 import { achatar, diasDaSemana, feriadosQueValem, fmtHoras, fmtMoeda, iniciais, nomeDiaSemana, paraData, somar, instante } from '../../projetos';
 import { formatarDataHora, formatarDiaMes, tempoDesde } from '../../labels';
 import type { Alocacao, Calculo, LinhaCalculo, Planejamento } from '../../types/projetos';
@@ -320,6 +321,7 @@ export function AbaCronograma({ p, editavel, editor, erros, calculando, onCalcul
     return (
       <div className="space-y-4">
         {errosBloco}
+        <PdfClienteCard p={p} editor={editor} />
         <Card className="text-center py-12">
           <CalendarRange size={32} className="mx-auto text-neutral-300" aria-hidden="true" />
           <p className="mt-3 font-medium text-neutral-800">Cronograma ainda não calculado</p>
@@ -373,6 +375,8 @@ export function AbaCronograma({ p, editavel, editor, erros, calculando, onCalcul
           )}
         </div>
       )}
+
+      <PdfClienteCard p={p} editor={editor} />
 
       <p className="text-sm text-neutral-500">
         Calculado {tempoDesde(instante(calc.calculadoEm))} · 8h por analista/dia · seg a sex

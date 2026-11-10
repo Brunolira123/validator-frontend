@@ -1,4 +1,5 @@
 import { isAxiosError } from 'axios';
+import { mensagemErro } from './erro';
 import api from './client';
 import type {
   Atividade,
@@ -121,6 +122,13 @@ export const planejamentosApi = {
     await api.delete(`${p(id)}/feriados-extras/${feriadoId}`);
   },
 
+  /**
+   * PDF do cronograma para o cliente. Exige cálculo em dia (senão 409). `marcarEnviado` passa a situação para
+   * ENVIADO (só os editores, a partir de EM_PLANEJAMENTO).
+   */
+  cronogramaPdf: async (id: number, marcarEnviado = false): Promise<Blob> =>
+    (await api.get<Blob>(`${p(id)}/cronograma.pdf`, { params: { marcarEnviado }, responseType: 'blob' })).data,
+
   /** Período de até 366 dias. */
   carga: async (de: string, ate: string): Promise<CargaDia[]> =>
     (await api.get<CargaDia[]>('/projetos/carga', { params: { de, ate } })).data,
@@ -131,4 +139,18 @@ export function errosDoCalculo(e: unknown): string[] | null {
   if (!isAxiosError<{ erros?: string[] }>(e) || e.response?.status !== 400) return null;
   const erros = e.response.data?.erros;
   return Array.isArray(erros) && erros.length > 0 ? erros : null;
+}
+
+/** Com `responseType: 'blob'` o corpo do erro também chega como Blob: lê o JSON para achar a `mensagem`. */
+export async function mensagemErroBlob(e: unknown, fallback: string): Promise<string> {
+  if (isAxiosError(e) && e.response?.data instanceof Blob) {
+    try {
+      const corpo = JSON.parse(await e.response.data.text()) as { mensagem?: string };
+      if (corpo.mensagem) return corpo.mensagem;
+    } catch {
+      // não era JSON: cai na mensagem por status
+    }
+    e.response.data = undefined;
+  }
+  return mensagemErro(e, fallback);
 }
