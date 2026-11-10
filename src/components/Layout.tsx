@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
-import { Outlet, NavLink, useNavigate } from 'react-router-dom';
+import { Outlet, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { Marca } from './Marca';
 import { Toaster } from './Toaster';
 import { House, LogOut, Menu, UsersRound, X } from 'lucide-react';
 import { useAuthStore, useIsAdmin } from '../stores/authStore';
-import { modulosDoPerfil } from '../modulos';
+import { modulosDoPerfil, submenuDoPerfil } from '../modulos';
 
 function iniciais(nome?: string) {
   if (!nome) return '?';
@@ -17,13 +17,20 @@ export function Layout() {
   const isAdmin = useIsAdmin();
   const logout = useAuthStore((s) => s.logout);
   const navigate = useNavigate();
+  const { pathname } = useLocation();
   const [menuAberto, setMenuAberto] = useState(false);
 
   // Início + módulos do perfil. `end` no Início: senão ele acenderia em qualquer rota.
   // Os módulos acendem em tudo abaixo da rota base (ex.: /comercial/clientes/12).
   const navItems = [
     { to: '/', label: 'Início', icon: House, end: true },
-    ...modulosDoPerfil(usuario?.perfil).map((m) => ({ to: m.rota, label: m.label, icon: m.icone, end: false })),
+    ...modulosDoPerfil(usuario?.perfil).map((m) => ({
+      to: m.rota,
+      label: m.label,
+      icon: m.icone,
+      end: false,
+      submenu: submenuDoPerfil(m, usuario?.perfil),
+    })),
     ...(isAdmin ? [{ to: '/usuarios', label: 'Usuários', icon: UsersRound, end: false }] : []),
   ];
 
@@ -82,9 +89,9 @@ export function Layout() {
         </div>
 
         <nav className="flex-1 px-3 py-2 space-y-1 overflow-y-auto">
-          {navItems.map(({ to, label, icon: Icon, end }) => (
+          {navItems.map(({ to, label, icon: Icon, end, ...item }) => (
+            <div key={to}>
             <NavLink
-              key={to}
               to={to}
               end={end}
               onClick={() => setMenuAberto(false)}
@@ -103,6 +110,26 @@ export function Layout() {
                 </>
               )}
             </NavLink>
+            {/* Submenu do módulo aberto (ex.: Projetos → Planejamentos, Templates…) */}
+            {'submenu' in item && item.submenu && item.submenu.length > 0 && (pathname === to || pathname.startsWith(`${to}/`)) && (
+              <div className="mt-1 mb-2 ml-4 pl-3 border-l border-white/10 space-y-0.5">
+                {item.submenu.map((sub) => (
+                  <NavLink
+                    key={sub.rota}
+                    to={sub.rota}
+                    onClick={() => setMenuAberto(false)}
+                    className={({ isActive }) =>
+                      `flex items-center px-3 py-2.5 md:py-2 rounded-lg text-sm transition-colors ${
+                        isActive ? 'bg-white/[0.08] text-white font-medium' : 'text-white/55 hover:bg-white/5 hover:text-white'
+                      }`
+                    }
+                  >
+                    {sub.label}
+                  </NavLink>
+                ))}
+              </div>
+            )}
+            </div>
           ))}
         </nav>
 

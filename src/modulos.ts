@@ -12,6 +12,8 @@ export interface Modulo {
   perfis: Perfil[];
   /** `false`: ainda não existe — fica fora do menu, da home e do router. */
   ativo: boolean;
+  /** Telas do módulo, abertas no menu quando ele está ativo. Sem `perfis`, valem as do módulo. */
+  submenu?: { rota: string; label: string; perfis?: Perfil[] }[];
 }
 
 // Regras de acesso do portal. Isto só esconde telas: quem barra de verdade é o backend (@PreAuthorize).
@@ -58,13 +60,25 @@ export const modulos: Modulo[] = [
     descricao: 'Implantações e cronogramas',
     icone: FolderKanban,
     rota: '/projetos',
-    perfis: ['ADMIN', 'DIRETORIA', 'PROJETOS'],
-    ativo: false,
+    // COMERCIAL só lê os planejamentos dos clientes que ele fechou; cadastros são dos editores
+    perfis: ['ADMIN', 'DIRETORIA', 'PROJETOS', 'COMERCIAL'],
+    ativo: true,
+    submenu: [
+      { rota: '/projetos/planejamentos', label: 'Planejamentos' },
+      { rota: '/projetos/templates', label: 'Templates', perfis: ['ADMIN', 'DIRETORIA', 'PROJETOS'] },
+      { rota: '/projetos/categorias', label: 'Categorias', perfis: ['ADMIN', 'DIRETORIA', 'PROJETOS'] },
+      { rota: '/projetos/feriados', label: 'Feriados', perfis: ['ADMIN', 'DIRETORIA', 'PROJETOS'] },
+    ],
   },
 ];
 
 export function podeAcessar(modulo: Modulo, perfil?: Perfil) {
   return modulo.ativo && !!perfil && modulo.perfis.includes(perfil);
+}
+
+/** Itens do submenu que o perfil vê. */
+export function submenuDoPerfil(modulo: Modulo, perfil?: Perfil) {
+  return (modulo.submenu ?? []).filter((i) => !!perfil && (i.perfis ?? modulo.perfis).includes(perfil));
 }
 
 export function modulosDoPerfil(perfil?: Perfil) {

@@ -16,10 +16,18 @@ import ClienteDetalhe from './pages/ClienteDetalhe';
 import LevantamentoDetalhe from './pages/LevantamentoDetalhe';
 import { RedirecionarComId } from './components/RedirecionarComId';
 import { modulo } from './modulos';
+import Planejamentos from './pages/projetos/Planejamentos';
+import PlanejamentoDetalhe from './pages/projetos/PlanejamentoDetalhe';
+import Templates from './pages/projetos/Templates';
+import TemplateEditor from './pages/projetos/TemplateEditor';
+import Categorias from './pages/projetos/Categorias';
+import Feriados from './pages/projetos/Feriados';
+import { perfisEditores } from './projetos';
 
 const comercial = modulo('comercial');
 const monitoramento = modulo('monitoramento');
 const suporte = modulo('suporte');
+const projetos = modulo('projetos');
 
 export const router = createBrowserRouter([
   {
@@ -62,6 +70,25 @@ export const router = createBrowserRouter([
         children: [
           { index: true, element: <Navigate to="clientes" replace /> },
           { path: 'clientes', element: <SuporteClientes /> },
+        ],
+      },
+      {
+        path: 'projetos',
+        element: <ProtectedRoute perfis={projetos.perfis} />,
+        children: [
+          { index: true, element: <Navigate to="planejamentos" replace /> },
+          { path: 'planejamentos', element: <Planejamentos /> },
+          { path: 'planejamentos/:id', element: <PlanejamentoDetalhe /> },
+          {
+            // Cadastros: o COMERCIAL só lê planejamentos (o backend responde 403)
+            element: <ProtectedRoute perfis={perfisEditores} />,
+            children: [
+              { path: 'templates', element: <Templates /> },
+              { path: 'templates/:id', element: <TemplateEditor /> },
+              { path: 'categorias', element: <Categorias /> },
+              { path: 'feriados', element: <Feriados /> },
+            ],
+          },
         ],
       },
 
