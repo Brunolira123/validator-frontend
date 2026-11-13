@@ -7,12 +7,18 @@ import type { TokenAgenteResponse } from '../types/api';
 interface Props {
   resultado: TokenAgenteResponse;
   onClose: () => void;
+  /** Token novo de um cliente que já tinha agente (reativação, troca): é para substituir o monitor.token. */
+  troca?: boolean;
+  titulo?: string;
 }
 
 /** Mostra o token do agente uma única vez (o backend guarda só o hash), com o trecho pronto para o vr.properties. */
-export function TokenAgenteModal({ resultado, onClose }: Props) {
+export function TokenAgenteModal({ resultado, onClose, troca = false, titulo }: Props) {
   const [copiado, setCopiado] = useState(false);
-  const trecho = `monitor.url=${window.location.origin}\nmonitor.token=${resultado.token}`;
+  // Na troca, o monitor.url já está lá: basta a linha do token
+  const trecho = troca
+    ? `monitor.token=${resultado.token}`
+    : `monitor.url=${window.location.origin}\nmonitor.token=${resultado.token}`;
   // Aberto pelo IP da rede local (http): esse endereço não existe na rede do cliente
   const enderecoLocal = window.location.protocol === 'http:' && window.location.hostname !== 'localhost';
 
@@ -26,7 +32,7 @@ export function TokenAgenteModal({ resultado, onClose }: Props) {
   };
 
   return (
-    <Modal title={`Token do agente: ${resultado.cliente.nome}`} onClose={onClose}>
+    <Modal title={titulo ?? `Token do agente: ${resultado.cliente.nome}`} onClose={onClose}>
       <div className="p-4 sm:p-6 space-y-4">
         <div className="flex gap-2 bg-amber-50 border border-amber-200 text-amber-800 text-sm rounded-lg p-3">
           <TriangleAlert size={18} className="shrink-0 mt-0.5" />
@@ -37,16 +43,24 @@ export function TokenAgenteModal({ resultado, onClose }: Props) {
         </div>
 
         <div>
-          <p className="text-sm font-medium text-neutral-700 mb-1">
-            Acrescente ao <code className="text-xs bg-neutral-100 px-1 py-0.5 rounded">vr.properties</code> do
-            cliente:
-          </p>
+          {troca ? (
+            <p className="text-sm font-medium text-neutral-700 mb-1">
+              Troque o <code className="text-xs bg-neutral-100 px-1 py-0.5 rounded">monitor.token</code> no{' '}
+              <code className="text-xs bg-neutral-100 px-1 py-0.5 rounded">vr.properties</code> do cliente: o token
+              anterior não é mais aceito.
+            </p>
+          ) : (
+            <p className="text-sm font-medium text-neutral-700 mb-1">
+              Acrescente ao <code className="text-xs bg-neutral-100 px-1 py-0.5 rounded">vr.properties</code> do
+              cliente:
+            </p>
+          )}
           <pre className="text-xs bg-neutral-900 text-neutral-100 rounded-lg p-3 overflow-x-auto select-all whitespace-pre-wrap break-all">
             {trecho}
           </pre>
         </div>
 
-        {enderecoLocal && (
+        {enderecoLocal && !troca && (
           <p className="text-sm text-red-600">
             Você abriu o portal pelo endereço da rede local. No <code className="text-xs">monitor.url</code>, use o endereço
             público (https://...ts.net), que é o que o cliente alcança.

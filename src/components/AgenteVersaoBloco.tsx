@@ -34,7 +34,11 @@ export function AgenteVersaoBloco({ cliente }: { cliente: SuporteClienteResponse
   const [erroVersao, setErroVersao] = useState<string | null>(null);
   const { versaoAgente, versaoAlvoAgente, updater, ultimaAtualizacao: ultima } = cliente;
 
-  const recarregar = () => queryClient.invalidateQueries({ queryKey: ['monitor', 'suporte', 'clientes'] });
+  // A lista única também mostra versão alvo e piloto
+  const recarregar = () => {
+    queryClient.invalidateQueries({ queryKey: ['monitor', 'suporte', 'clientes'] });
+    queryClient.invalidateQueries({ queryKey: ['monitor', 'clientes'] });
+  };
 
   const definir = useMutation({
     mutationFn: (v: string | null) => monitorApi.definirVersaoAlvo(cliente.id, v),
@@ -71,10 +75,10 @@ export function AgenteVersaoBloco({ cliente }: { cliente: SuporteClienteResponse
   const erro = definir.error ?? piloto.error;
 
   return (
-    <section aria-labelledby={`${inputId}-titulo`} className="mt-6 pt-4 border-t border-neutral-200">
+    <section aria-labelledby={`${inputId}-titulo`}>
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h3 id={`${inputId}-titulo`} className="text-base font-semibold text-neutral-900">
-          Agente
+          Versão do agente
         </h3>
         <label htmlFor={pilotoId} className="inline-flex items-center gap-2 min-h-11 md:min-h-0 cursor-pointer select-none">
           <span className="text-sm text-neutral-700">Piloto</span>

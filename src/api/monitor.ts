@@ -1,7 +1,8 @@
 import type {
+  ClienteListaResponse,
   ClienteMonitoradoDetalhe,
+  FiltroClientes,
   ClienteMonitoradoRequest,
-  ClienteMonitoradoResponse,
   ExecucaoMonitor,
   PedidoConsulta,
   PedidoLog,
@@ -11,12 +12,37 @@ import type {
   VersaoAlvoLoteRequest,
   SuporteClienteResponse,
   TokenAgenteResponse,
+  VersaoBancoContagem,
 } from '../types/api';
 import api from './client';
 
 export const monitorApi = {
-  listar: async (): Promise<ClienteMonitoradoResponse[]> => {
-    const { data } = await api.get<ClienteMonitoradoResponse[]>('/monitor/clientes');
+  // Lista única (Monitoramento + Suporte). Sem filtro: só os ativos
+  listar: async (filtro: FiltroClientes = {}): Promise<ClienteListaResponse[]> => {
+    const params = Object.fromEntries(
+      Object.entries(filtro).filter(([, v]) => v !== undefined && v !== false && v !== '' && !(Array.isArray(v) && !v.length)),
+    );
+    const { data } = await api.get<ClienteListaResponse[]>('/monitor/clientes', {
+      params,
+      // situacao=OK&situacao=FALHA (o Spring não entende situacao[]=)
+      paramsSerializer: { indexes: null },
+    });
+    return data;
+  },
+
+  versoesBanco: async (): Promise<VersaoBancoContagem[]> => {
+    const { data } = await api.get<VersaoBancoContagem[]>('/monitor/versoes-banco');
+    return data;
+  },
+
+  // ADMIN/DIRETORIA. Revoga o token, expira os pedidos abertos e cancela a versão alvo; o histórico fica
+  desativar: async (id: number, motivo: string | null): Promise<void> => {
+    await api.post(`/monitor/clientes/${id}/desativar`, { motivo });
+  },
+
+  // ADMIN/DIRETORIA. Token novo, que só aparece aqui
+  reativar: async (id: number): Promise<TokenAgenteResponse> => {
+    const { data } = await api.post<TokenAgenteResponse>(`/monitor/clientes/${id}/reativar`);
     return data;
   },
 

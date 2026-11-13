@@ -1,11 +1,10 @@
-import { situacaoAtualizacao } from '../versaoAgente';
-import type { SuporteClienteResponse } from '../types/api';
+import { situacaoAtualizacao, type EstadoAtualizacao } from '../versaoAgente';
 
 /**
  * "→ 2.4.1 pendente" ou "Falha na atualização"; nada quando não há versão alvo.
  * `semVersao`: só "Pendente", para quando a versão alvo já aparece ao lado.
  */
-export function BadgeAtualizacao({ cliente, semVersao = false }: { cliente: SuporteClienteResponse; semVersao?: boolean }) {
+export function BadgeAtualizacao({ cliente, semVersao = false }: { cliente: EstadoAtualizacao; semVersao?: boolean }) {
   const situacao = situacaoAtualizacao(cliente);
   if (!situacao) return null;
 

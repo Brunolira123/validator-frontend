@@ -86,6 +86,13 @@ export function formatarDiaMes(data: string): string {
   return dataCurta.format(new Date(`${data}T00:00:00Z`));
 }
 
+const diaMesLocal = new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit' });
+
+/** ISO (com fuso) → "12/11" no horário do navegador. */
+export function formatarDiaMesInstante(iso: string): string {
+  return diaMesLocal.format(new Date(iso));
+}
+
 /** "2026-10-29" (LocalDate) → "29/10/2026". UTC para não voltar um dia em fusos negativos. */
 export function formatarData(data: string): string {
   return dataCompleta.format(new Date(`${data}T00:00:00Z`));

@@ -386,6 +386,64 @@ export interface ClienteMonitoradoResponse {
   consistenciaAutomatica: boolean | null;
 }
 
+/** Verificações da última execução, se ela chegou hoje (fuso do servidor). */
+export interface HojeCliente {
+  execucaoEm: string;
+  ok: boolean;
+  erro: string | null;
+  totalLojas: number;
+  lojasComFalha: number;
+  /** Por tipo, em ordem alfabética. lojas: quantas rodaram; falhas: em quantas falhou. */
+  verificacoes: { tipo: string; lojas: number; falhas: number }[];
+}
+
+export interface AmbienteResumo {
+  coletadoEm: string;
+  dockerDisponivel: boolean;
+  erro: string | null;
+  total: number;
+  rodando: number;
+  parados: number;
+}
+
+export interface DesativacaoCliente {
+  em: string;
+  porId: number | null;
+  porNome: string | null;
+  motivo: string | null;
+}
+
+/** GET /monitor/clientes: lista única (Monitoramento + Suporte). */
+export interface ClienteListaResponse extends ClienteMonitoradoResponse {
+  /** null: não houve execução hoje. */
+  hoje: HojeCliente | null;
+  /** null: o agente nunca enviou o ambiente. */
+  ambiente: AmbienteResumo | null;
+  versaoAlvoAgente: string | null;
+  piloto: boolean;
+  updater: UpdaterAgente | null;
+  /** null enquanto o cliente está ativo. */
+  desativacao: DesativacaoCliente | null;
+}
+
+/** Filtros da lista; todos combinam (E), menos versaoBanco + semVersaoBanco, que valem como OU. */
+export interface FiltroClientes {
+  busca?: string;
+  situacao?: SituacaoMonitor[];
+  comParado?: boolean;
+  versaoBanco?: string[];
+  semVersaoBanco?: boolean;
+  agenteDesatualizado?: boolean;
+  piloto?: boolean;
+  inativos?: boolean;
+}
+
+/** GET /monitor/versoes-banco: versões em uso nos ativos, em ordem numérica. */
+export interface VersaoBancoContagem {
+  versao: string;
+  clientes: number;
+}
+
 /** NFC-e de ontem não transmitida: o que costuma segurar a consistência da loja. */
 export interface NfceNaoTransmitida {
   contingencia: boolean;

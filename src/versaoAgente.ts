@@ -1,5 +1,10 @@
 import type { SuporteClienteResponse } from './types/api';
 
+/** O que decide o badge de atualização. ultimaAtualizacao só vem na lista do Suporte. */
+export type EstadoAtualizacao = Pick<SuporteClienteResponse, 'versaoAlvoAgente'> & {
+  ultimaAtualizacao?: SuporteClienteResponse['ultimaAtualizacao'];
+};
+
 /** Primeira versão do agente que atende pedido de log (app.monitor.versao-minima-log). */
 export const VERSAO_MINIMA_LOG = '2.3.0';
 /** Primeira versão que atende START/RESTART (app.monitor.versao-minima-acao). */
@@ -48,7 +53,7 @@ export function versaoMaisNova(clientes: SuporteClienteResponse[]): string | nul
  * FALHA: a última tentativa foi para a versão alvo atual e deu FALHOU/ROLLBACK (o updater não tenta de novo).
  * PENDENTE: há versão alvo e ela ainda não falhou.
  */
-export function situacaoAtualizacao(c: SuporteClienteResponse): 'FALHA' | 'PENDENTE' | null {
+export function situacaoAtualizacao(c: EstadoAtualizacao): 'FALHA' | 'PENDENTE' | null {
   if (!c.versaoAlvoAgente) return null;
   const u = c.ultimaAtualizacao;
   if (u && u.status !== 'ATUALIZADO' && u.versaoAlvo === c.versaoAlvoAgente) return 'FALHA';

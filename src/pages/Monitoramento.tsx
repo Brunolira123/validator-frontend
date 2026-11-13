@@ -1,133 +1,134 @@
 import { useState } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useNavigate } from 'react-router-dom';
-import { Activity, Plus, Store } from 'lucide-react';
+import { keepPreviousData, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useSearchParams } from 'react-router-dom';
+import { Activity, Plus, Upload } from 'lucide-react';
 import { monitorApi } from '../api/monitor';
 import { mensagemErro } from '../api/erro';
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
 import { ErrorAlert } from '../components/ErrorAlert';
-import { SituacaoMonitorBadge } from '../components/SituacaoMonitorBadge';
-import { InfoBancoCliente } from '../components/InfoBancoCliente';
 import { NovoClienteMonitoradoModal } from '../components/NovoClienteMonitoradoModal';
 import { TokenAgenteModal } from '../components/TokenAgenteModal';
-import { FiltroFalhaSelector, type FiltroFalha } from '../components/FiltroFalha';
+import { AtualizarAgentesModal } from '../components/AtualizarAgentesModal';
+import { FiltrosClientes } from '../components/monitor/FiltrosClientes';
+import { ClienteMonitorCard } from '../components/monitor/ClienteMonitorCard';
+import { filtroDaUrl, temFiltro } from '../components/monitor/filtrosUrl';
 import { useIsAdmin } from '../stores/authStore';
-import { formatarCnpj, tempoDesde } from '../labels';
-import type { ClienteMonitoradoResponse, SituacaoMonitor, TokenAgenteResponse } from '../types/api';
+import type { ClienteListaResponse, SituacaoMonitor, TokenAgenteResponse } from '../types/api';
 
 /** Problemas primeiro: quem abre a tela quer ver o que precisa de atenção. */
 const prioridade: Record<SituacaoMonitor, number> = { OFFLINE: 0, FALHA: 1, AGUARDANDO: 2, OK: 3, INATIVO: 4 };
 
-function resumoLojas(c: ClienteMonitoradoResponse) {
-  if (c.situacao === 'AGUARDANDO') return 'Agente ainda não enviou resultado';
-  if (c.lojasComFalha > 0) return `${c.lojasComFalha} de ${c.totalLojas} loja(s) com falha`;
-  return `${c.totalLojas} loja(s) ok`;
+const parados = (c: ClienteListaResponse) => (c.ambiente?.dockerDisponivel ? c.ambiente.parados : 0);
+
+function comparar(a: ClienteListaResponse, b: ClienteListaResponse) {
+  return (
+    prioridade[a.situacao] - prioridade[b.situacao] ||
+    Number(parados(b) > 0) - Number(parados(a) > 0) ||
+    a.nome.localeCompare(b.nome)
+  );
 }
 
-const temProblema = (c: ClienteMonitoradoResponse) => c.situacao === 'FALHA' || c.situacao === 'OFFLINE';
+const temProblema = (c: ClienteListaResponse) => c.situacao === 'FALHA' || c.situacao === 'OFFLINE';
 
-const vazioFiltro: Record<FiltroFalha, string> = {
-  FALHA: 'Nenhum cliente com falha.',
-  OK: 'Nenhum cliente sem falha.',
-  TODAS: '',
-};
-
+/**
+ * Lista única de clientes (Monitoramento + Suporte). Suporte → Clientes chega com ?foco=ambiente: os cards
+ * abrem direto na aba Ambiente.
+ */
 export default function Monitoramento() {
-  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const isAdmin = useIsAdmin();
+  const [params] = useSearchParams();
   const [novoAberto, setNovoAberto] = useState(false);
+  const [atualizarAberto, setAtualizarAberto] = useState(false);
   const [tokenGerado, setTokenGerado] = useState<TokenAgenteResponse | null>(null);
-  // Por padrão só quem precisa de atenção (falha ou offline)
-  const [filtro, setFiltro] = useState<FiltroFalha>('FALHA');
 
-  const { data: clientes, isLoading, error } = useQuery({
-    queryKey: ['monitor', 'clientes'],
-    queryFn: monitorApi.listar,
+  const filtro = filtroDaUrl(params);
+  const focoAmbiente = params.get('foco') === 'ambiente';
+  const filtrando = temFiltro(params);
+
+  const { data: clientes, isLoading, isFetching, error } = useQuery({
+    queryKey: ['monitor', 'clientes', filtro],
+    queryFn: () => monitorApi.listar(filtro),
+    // Troca de filtro não pisca a lista inteira
+    placeholderData: keepPreviousData,
     // Tela de acompanhamento: fica aberta no monitor do suporte
     refetchInterval: 60_000,
   });
 
-  const ordenados = clientes
-    ? [...clientes].sort((a, b) => prioridade[a.situacao] - prioridade[b.situacao] || a.nome.localeCompare(b.nome))
-    : undefined;
+  // Só para a "Falha na atualização" e o "Atualizar agentes": a lista única não traz a última tentativa
+  const { data: suporte } = useQuery({
+    queryKey: ['monitor', 'suporte', 'clientes'],
+    queryFn: monitorApi.suporteClientes,
+    refetchInterval: 60_000,
+  });
+  const ultimaAtualizacao = new Map(suporte?.map((s) => [s.id, s.ultimaAtualizacao]));
+
+  const ordenados = clientes ? [...clientes].sort(comparar) : undefined;
   const comProblema = clientes?.filter(temProblema).length ?? 0;
-  const contagem: Record<FiltroFalha, number> = {
-    FALHA: comProblema,
-    OK: (clientes?.length ?? 0) - comProblema,
-    TODAS: clientes?.length ?? 0,
-  };
-  const filtrados =
-    filtro === 'TODAS' ? ordenados : ordenados?.filter((c) => (filtro === 'FALHA' ? temProblema(c) : !temProblema(c)));
+  const comParado = clientes?.filter((c) => parados(c) > 0).length ?? 0;
+  const lista = params.toString() ? `?${params}` : '';
 
   return (
     <div>
-      <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
         <div>
-          <h1 className="text-2xl font-bold text-neutral-900">Monitoramento</h1>
+          <h1 className="text-2xl font-bold text-neutral-900">{focoAmbiente ? 'Clientes' : 'Monitoramento'}</h1>
           <p className="text-sm text-neutral-500 mt-1">
-            {clientes?.length ?? 0} cliente(s)
+            {clientes?.length ?? 0} cliente(s){filtrando && ' no filtro'}
             {comProblema > 0 && <span className="text-red-600 font-medium"> · {comProblema} precisando de atenção</span>}
+            {comParado > 0 && <span className="text-red-600 font-medium"> · {comParado} com container parado</span>}
           </p>
         </div>
         {isAdmin && (
-          <Button onClick={() => setNovoAberto(true)}>
-            <Plus size={16} />
-            Novo cliente
-          </Button>
+          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+            {suporte && suporte.length > 0 && (
+              <Button variant="secondary" onClick={() => setAtualizarAberto(true)}>
+                <Upload size={16} aria-hidden="true" />
+                Atualizar agentes
+              </Button>
+            )}
+            <Button onClick={() => setNovoAberto(true)}>
+              <Plus size={16} aria-hidden="true" />
+              Novo cliente
+            </Button>
+          </div>
         )}
       </div>
 
-      {clientes && clientes.length > 0 && (
-        <div className="mb-4">
-          <FiltroFalhaSelector valor={filtro} onChange={setFiltro} contagem={contagem} rotulo="clientes" labelTodas="Todos" />
-        </div>
-      )}
+      <FiltrosClientes />
 
       {isLoading && <p className="text-neutral-500">Carregando...</p>}
 
-      {error && <ErrorAlert>{mensagemErro(error, 'Erro ao carregar clientes monitorados')}</ErrorAlert>}
+      {error && <ErrorAlert>{mensagemErro(error, 'Erro ao carregar os clientes')}</ErrorAlert>}
 
       {clientes && clientes.length === 0 && (
         <Card>
           <div className="text-center py-8">
-            <Activity size={32} className="mx-auto text-neutral-300" />
+            <Activity size={32} className="mx-auto text-neutral-300" aria-hidden="true" />
             <p className="text-neutral-500 mt-3">
-              Nenhum cliente monitorado ainda.
-              {isAdmin && ' Clique em "Novo cliente" para gerar o token do agente.'}
+              {filtrando
+                ? 'Nenhum cliente encontrado com esses filtros.'
+                : `Nenhum cliente monitorado ainda.${isAdmin ? ' Clique em "Novo cliente" para gerar o token do agente.' : ''}`}
             </p>
           </div>
         </Card>
       )}
 
-      {clientes && clientes.length > 0 && filtrados?.length === 0 && (
-        <Card>
-          <p className="text-center text-neutral-500 py-6">{vazioFiltro[filtro]}</p>
-        </Card>
-      )}
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-        {filtrados?.map((c) => (
-          <Card key={c.id} interativo onClick={() => navigate(`/monitoramento/clientes/${c.id}`)}>
-            <div className="flex items-start justify-between gap-3">
-              <div className="min-w-0">
-                <p className="font-semibold text-neutral-900 truncate">{c.nome}</p>
-                {c.cnpj && <p className="text-xs text-neutral-500">{formatarCnpj(c.cnpj)}</p>}
-              </div>
-              <SituacaoMonitorBadge situacao={c.situacao} />
-            </div>
-            <div className="mt-4 flex items-center gap-2 text-sm text-neutral-600">
-              <Store size={16} className="text-neutral-400 shrink-0" />
-              <span className={c.lojasComFalha > 0 ? 'text-red-600 font-medium' : ''}>{resumoLojas(c)}</span>
-            </div>
-            <div className="mt-2">
-              <InfoBancoCliente cliente={c} />
-            </div>
-            <p className="mt-1 text-xs text-neutral-400">
-              {c.ultimoContato ? `Último contato ${tempoDesde(c.ultimoContato)}` : 'Agente nunca se conectou'}
-            </p>
-          </Card>
+      <div
+        aria-busy={isFetching}
+        className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 items-start transition-opacity ${
+          isFetching && !isLoading ? 'opacity-60' : ''
+        }`}
+      >
+        {ordenados?.map((c) => (
+          <ClienteMonitorCard
+            key={c.id}
+            cliente={c}
+            ultimaAtualizacao={ultimaAtualizacao.get(c.id)}
+            para={`/monitoramento/clientes/${c.id}${focoAmbiente ? '?aba=ambiente' : ''}`}
+            lista={lista}
+          />
         ))}
       </div>
 
@@ -137,12 +138,16 @@ export default function Monitoramento() {
           onSuccess={(resultado) => {
             setNovoAberto(false);
             setTokenGerado(resultado);
-            queryClient.invalidateQueries({ queryKey: ['monitor', 'clientes'] });
+            queryClient.invalidateQueries({ queryKey: ['monitor'] });
           }}
         />
       )}
 
       {tokenGerado && <TokenAgenteModal resultado={tokenGerado} onClose={() => setTokenGerado(null)} />}
+
+      {atualizarAberto && suporte && (
+        <AtualizarAgentesModal clientes={suporte} onClose={() => setAtualizarAberto(false)} />
+      )}
     </div>
   );
 }

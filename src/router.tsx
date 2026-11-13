@@ -8,7 +8,6 @@ import Relatorios from './pages/Relatorios';
 import Monitoramento from './pages/Monitoramento';
 import MonitoramentoCliente from './pages/MonitoramentoCliente';
 import Usuarios from './pages/Usuarios';
-import SuporteClientes from './pages/SuporteClientes';
 import NotFound from './pages/NotFound';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { Layout } from './components/Layout';
@@ -68,8 +67,10 @@ export const router = createBrowserRouter([
         path: 'suporte',
         element: <ProtectedRoute perfis={suporte.perfis} />,
         children: [
-          { index: true, element: <Navigate to="clientes" replace /> },
-          { path: 'clientes', element: <SuporteClientes /> },
+          // A lista do Suporte virou a lista única do Monitoramento, focada no ambiente
+          { index: true, element: <Navigate to="/monitoramento?foco=ambiente" replace /> },
+          { path: 'clientes', element: <Navigate to="/monitoramento?foco=ambiente" replace /> },
+          { path: 'clientes/:id', element: <RedirecionarComId para="/monitoramento/clientes" busca="?aba=ambiente" /> },
         ],
       },
       {

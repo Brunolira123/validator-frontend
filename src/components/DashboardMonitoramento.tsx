@@ -59,7 +59,7 @@ export function DashboardMonitoramento() {
   // Mesma query da tela de Monitoramento: reaproveita o cache ao navegar
   const { data: clientes, isLoading, error } = useQuery({
     queryKey: ['monitor', 'clientes'],
-    queryFn: monitorApi.listar,
+    queryFn: () => monitorApi.listar(),
     refetchInterval: 60_000,
   });
 

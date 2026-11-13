@@ -67,6 +67,7 @@ export function AcaoContainerPainel({ clienteId, clienteNome, container, tipo, o
     avisou.current = true;
     toast(`${container} ${t.sucesso} em ${clienteNome}.`);
     queryClient.invalidateQueries({ queryKey: ['monitor', 'suporte', 'clientes'] });
+    queryClient.invalidateQueries({ queryKey: ['monitor', 'clientes'] });
     onVoltar();
   }, [pedido?.status, container, clienteNome, t.sucesso, queryClient, onVoltar]);
 
